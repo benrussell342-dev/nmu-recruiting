@@ -6,134 +6,149 @@ import PlayerProfile from "./PlayerProfile";
 import DepthChart from "./DepthChart";
 
 const LISTS = [
-  "Hot List",
-  "Player of Interest",
-  "Tracking",
-  "Contacted NMU",
-  "Committed",
-  "Transfer Portal"
+"Hot List",
+"Player of Interest",
+"Tracking",
+"Contacted NMU",
+"Committed",
+"Transfer Portal"
 ];
 
 export default function RecruitBoard() {
 
-  const [players, setPlayers] = useState([]);
-  const [selectedPlayer, setSelectedPlayer] = useState(null);
-  const [showAddPlayer, setShowAddPlayer] = useState(false);
-  const [showDepthChart, setShowDepthChart] = useState(false);
+const [players,setPlayers] = useState([]);
+const [showAdd,setShowAdd] = useState(false);
+const [selected,setSelected] = useState(null);
+const [showDepth,setShowDepth] = useState(false);
 
-  function addPlayer(player) {
-    setPlayers((prev) => [...prev, player]);
-    setShowAddPlayer(false);
-  }
+function addPlayer(player){
+setPlayers(p=>[...p,{...player,id:crypto.randomUUID(),status:"Tracking"}]);
+setShowAdd(false);
+}
 
-  function deletePlayer(id) {
-    setPlayers((prev) => prev.filter((p) => p.id !== id));
-    setSelectedPlayer(null);
-  }
+function movePlayer(id,newStatus){
+setPlayers(players.map(p=>p.id===id?{...p,status:newStatus}:p));
+}
 
-  function movePlayer(playerId, newStatus) {
-    setPlayers((prev) =>
-      prev.map((p) =>
-        p.id === playerId ? { ...p, status: newStatus } : p
-      )
-    );
-  }
+function deletePlayer(id){
+setPlayers(players.filter(p=>p.id!==id));
+setSelected(null);
+}
 
-  const safePlayers = Array.isArray(players) ? players : [];
+return (
 
-  return (
-    <div style={{ padding: 24 }}>
+<div style={{
+background:"#00563F",
+minHeight:"100vh",
+padding:30,
+fontFamily:"Arial"
+}}>
 
-      {/* HEADER */}
-      <div style={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        marginBottom: 20
-      }}>
-        <h1>NMU Hockey Recruiting Board</h1>
+{/* HEADER */}
 
-        <div style={{ display: "flex", gap: 10 }}>
-          <button onClick={() => setShowAddPlayer(true)}>
-            Add Player
-          </button>
+<div style={{
+display:"flex",
+justifyContent:"space-between",
+alignItems:"center",
+marginBottom:30
+}}>
 
-          <button onClick={() => setShowDepthChart(true)}>
-            Depth Chart
-          </button>
-        </div>
-      </div>
+<div style={{display:"flex",alignItems:"center",gap:15}}>
+<img src="/wildcat.png" style={{height:50}} />
+<h1 style={{color:"#CFB53B"}}>
+NMU Hockey Recruiting Board
+</h1>
+</div>
 
-      {/* BOARD */}
-      <div style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(6, 1fr)",
-        gap: 16
-      }}>
+<div style={{display:"flex",gap:12}}>
+<button onClick={()=>setShowAdd(true)}>Add Player</button>
+<button onClick={()=>setShowDepth(true)}>Depth Chart</button>
+</div>
 
-        {LISTS.map((status) => {
+</div>
 
-          const listPlayers =
-            safePlayers.filter((p) => p.status === status) || [];
+{/* BOARD */}
 
-          return (
-            <div
-              key={status}
-              style={{
-                border: "1px solid #ddd",
-                borderRadius: 8,
-                padding: 10,
-                minHeight: 300
-              }}
-            >
-              <h3>{status}</h3>
+<div style={{
+display:"grid",
+gridTemplateColumns:"repeat(6,1fr)",
+gap:15
+}}>
 
-              {listPlayers.map((player) => (
-                <div
-                  key={player.id}
-                  style={{
-                    border: "1px solid #ccc",
-                    padding: 8,
-                    marginTop: 8,
-                    borderRadius: 6,
-                    cursor: "pointer",
-                    background: "#fafafa"
-                  }}
-                  onClick={() => setSelectedPlayer(player)}
-                >
-                  <b>{player.name}</b>
-                  <div>{player.position}</div>
-                </div>
-              ))}
-            </div>
-          );
-        })}
-      </div>
+{LISTS.map(status=>(
 
-      {/* MODALS */}
+<div key={status}
+style={{
+background:"#ffffff",
+borderRadius:8,
+padding:10,
+minHeight:350
+}}>
 
-      {showAddPlayer && (
-        <AddPlayerModal
-          onClose={() => setShowAddPlayer(false)}
-          onAdd={addPlayer}
-        />
-      )}
+<h3 style={{borderBottom:"2px solid #CFB53B"}}>
+{status}
+</h3>
 
-      {selectedPlayer && (
-        <PlayerProfile
-          player={selectedPlayer}
-          onClose={() => setSelectedPlayer(null)}
-          onDelete={() => deletePlayer(selectedPlayer.id)}
-        />
-      )}
+{players.filter(p=>p.status===status).map(p=>(
 
-      {showDepthChart && (
-        <DepthChart
-          players={safePlayers}
-          onClose={() => setShowDepthChart(false)}
-        />
-      )}
+<div key={p.id}
+style={{
+border:"1px solid #ddd",
+padding:8,
+marginTop:8,
+borderRadius:6,
+cursor:"pointer"
+}}
+onClick={()=>setSelected(p)}>
 
-    </div>
-  );
+<b>{p.name}</b>
+
+<div>{p.position}</div>
+
+<select
+value={p.status}
+onChange={e=>movePlayer(p.id,e.target.value)}
+style={{marginTop:5}}>
+
+{LISTS.map(s=>(
+
+<option key={s}>{s}</option>
+))}
+
+</select>
+
+</div>
+
+))}
+
+</div>
+
+))}
+
+</div>
+
+{showAdd &&
+<AddPlayerModal
+onClose={()=>setShowAdd(false)}
+onAdd={addPlayer}
+/>
+}
+
+{selected &&
+<PlayerProfile
+player={selected}
+onClose={()=>setSelected(null)}
+onDelete={()=>deletePlayer(selected.id)}
+/>
+}
+
+{showDepth &&
+<DepthChart
+players={players}
+onClose={()=>setShowDepth(false)}
+/>
+}
+
+</div>
+);
 }
