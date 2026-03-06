@@ -19,7 +19,5 @@
     "react-dom": "^18"
   },
   "devDependencies": {
-    "eslint": "^8",
-    "eslint-config-next": "^16.1.6"
   }
 }
