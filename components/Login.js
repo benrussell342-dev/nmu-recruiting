@@ -24,9 +24,11 @@ password
 
 setUser(result.user);
 
-}catch(err){
+}catch(error){
 
-alert("Login failed");
+console.log(error);
+
+alert(error.message);
 
 }
 
