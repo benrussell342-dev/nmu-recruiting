@@ -1,45 +1,35 @@
 "use client";
 
 import { useState } from "react";
+import { db } from "../lib/firebase";
+import { updateDoc,doc } from "firebase/firestore";
 
 const GREEN="#00563F";
 const GOLD="#CFB53B";
 
-export default function PlayerProfile({player,onClose,onDelete}){
+export default function PlayerProfile({player,onClose}){
 
-const [scholarship,setScholarship]=useState(player.scholarship||"");
+const [scholarship,setScholarship]=useState(player.scholarship||0);
 const [matriculation,setMatriculation]=useState(player.matriculation||"");
 
 const [reports,setReports]=useState(player.reports||[]);
 const [notes,setNotes]=useState(player.notes||[]);
 const [contacts,setContacts]=useState(player.contacts||[]);
 
-const [report,setReport]=useState({
-opponent:"",
-date:"",
-score:"",
-rating:3,
-notes:""
+async function savePlayer(){
+
+await updateDoc(doc(db,"players",player.id),{
+
+scholarship,
+matriculation,
+reports,
+notes,
+contacts
+
 });
 
-function addReport(){
-setReports([...reports,report]);
-setReport({opponent:"",date:"",score:"",rating:3,notes:""});
-}
+alert("Saved");
 
-function addNote(text){
-setNotes([...notes,{
-text,
-date:new Date().toLocaleDateString()
-}]);
-}
-
-function addContact(type,notesText){
-setContacts([...contacts,{
-type,
-notes:notesText,
-date:new Date().toLocaleDateString()
-}]);
 }
 
 return(
@@ -53,8 +43,6 @@ height:"100%",
 background:"#f4f6f7",
 overflow:"auto"
 }}>
-
-{/* HEADER */}
 
 <div style={{
 background:GREEN,
@@ -74,7 +62,7 @@ Player Profile
 
 <div style={{padding:40}}>
 
-<button onClick={onClose}>Back</button> <button onClick={onDelete}>Delete Player</button>
+<button onClick={onClose}>Back</button>
 
 <h1 style={{color:GREEN}}>
 {player.name}
@@ -98,8 +86,6 @@ marginTop:30
 <p><b>Position:</b> {player.position}</p>
 <p><b>Height:</b> {player.height}</p>
 <p><b>Weight:</b> {player.weight}</p>
-<p><b>Hand:</b> {player.hand}</p>
-<p><b>Agent:</b> {player.agent}</p>
 
 <p>
 
@@ -108,7 +94,6 @@ marginTop:30
 <input
 value={matriculation}
 onChange={e=>setMatriculation(e.target.value)}
-style={{marginLeft:10,width:100}}
 />
 
 </p>
@@ -120,35 +105,26 @@ style={{marginLeft:10,width:100}}
 <input
 value={scholarship}
 onChange={e=>setScholarship(e.target.value)}
-style={{marginLeft:10,width:100}}
 />
 
 </p>
 
-<p>
 <a href={player.epLink} target="_blank">
-EliteProspects Profile
+EliteProspects
 </a>
-</p>
-
-<p>
-<a href={player.instatLink} target="_blank">
-InStat Video
-</a>
-</p>
-
-{/* SCOUT NOTES */}
 
 <h3 style={{color:GOLD,marginTop:30}}>Scout Notes</h3>
 
 <textarea
-placeholder="Add scout note"
-onBlur={e=>addNote(e.target.value)}
-style={{width:"100%",height:60}}
+placeholder="Add note"
+onBlur={e=>setNotes([...notes,{
+text:e.target.value,
+date:new Date().toLocaleDateString()
+}])}
 />
 
 {notes.map((n,i)=>(
-<div key={i} style={{marginTop:8}}>
+<div key={i}>
 <b>{n.date}</b>
 <div>{n.text}</div>
 </div>
@@ -162,91 +138,35 @@ style={{width:"100%",height:60}}
 
 <h3 style={{color:GOLD}}>Game Reports</h3>
 
-<input
-placeholder="Opponent"
-value={report.opponent}
-onChange={e=>setReport({...report,opponent:e.target.value})}
-/>
-
-<input
-type="date"
-value={report.date}
-onChange={e=>setReport({...report,date:e.target.value})}
-/>
-
-<input
-placeholder="Score"
-value={report.score}
-onChange={e=>setReport({...report,score:e.target.value})}
-/>
-
-<select
-value={report.rating}
-onChange={e=>setReport({...report,rating:e.target.value})}
->
-
-<option value="1">★</option>
-<option value="2">★★</option>
-<option value="3">★★★</option>
-<option value="4">★★★★</option>
-<option value="5">★★★★★</option>
-
-</select>
-
 <textarea
-placeholder="Game notes"
-value={report.notes}
-onChange={e=>setReport({...report,notes:e.target.value})}
+placeholder="Game report"
+onBlur={e=>setReports([...reports,{
+text:e.target.value,
+date:new Date().toLocaleDateString()
+}])}
 />
-
-<button onClick={addReport}>
-Add Report
-</button>
 
 {reports.map((r,i)=>(
-<div key={i} style={{marginTop:10}}>
-<b>{r.opponent}</b>
-<div>{r.score}</div>
-<div>{r.notes}</div>
+<div key={i}>
+<b>{r.date}</b>
+<div>{r.text}</div>
 </div>
 ))}
-
-{/* CONTACT LOG */}
 
 <h3 style={{color:GOLD,marginTop:30}}>Contact Log</h3>
 
-<select id="contactType">
-<option>Call</option>
-<option>Text</option>
-<option>Email</option>
-<option>Zoom</option>
-<option>In Person</option>
-</select>
-
 <textarea
-id="contactNotes"
-placeholder="Contact notes"
+placeholder="Contact log"
+onBlur={e=>setContacts([...contacts,{
+text:e.target.value,
+date:new Date().toLocaleDateString()
+}])}
 />
-
-<button
-onClick={()=>{
-
-const type=document.getElementById("contactType").value;
-const notes=document.getElementById("contactNotes").value;
-
-addContact(type,notes);
-
-}}
->
-
-Add Contact
-
-</button>
 
 {contacts.map((c,i)=>(
 <div key={i}>
-<b>{c.date}</b> — {c.type}
-<div>{c.notes}</div>
+<b>{c.date}</b>
+<div>{c.text}</div>
 </div>
 ))}
 
@@ -254,8 +174,17 @@ Add Contact
 
 </div>
 
+<button
+style={{marginTop:30}}
+onClick={savePlayer}
+>
+Save Player Data
+</button>
+
 </div>
 
 </div>
+
 );
+
 }
