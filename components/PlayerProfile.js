@@ -7,10 +7,12 @@ const GOLD="#CFB53B";
 
 export default function PlayerProfile({player,onClose,onDelete}){
 
-const [scholarship,setScholarship]=useState("");
-const [gameReports,setGameReports]=useState([]);
-const [notes,setNotes]=useState([]);
-const [contacts,setContacts]=useState([]);
+const [scholarship,setScholarship]=useState(player.scholarship||"");
+const [matriculation,setMatriculation]=useState(player.matriculation||"");
+
+const [reports,setReports]=useState(player.reports||[]);
+const [notes,setNotes]=useState(player.notes||[]);
+const [contacts,setContacts]=useState(player.contacts||[]);
 
 const [report,setReport]=useState({
 opponent:"",
@@ -21,7 +23,8 @@ notes:""
 });
 
 function addReport(){
-setGameReports([...gameReports,report]);
+setReports([...reports,report]);
+setReport({opponent:"",date:"",score:"",rating:3,notes:""});
 }
 
 function addNote(text){
@@ -47,14 +50,35 @@ top:0,
 left:0,
 width:"100%",
 height:"100%",
-background:"#fff",
-overflow:"auto",
-padding:40
+background:"#f4f6f7",
+overflow:"auto"
 }}>
+
+{/* HEADER */}
+
+<div style={{
+background:GREEN,
+padding:20,
+display:"flex",
+alignItems:"center",
+gap:15
+}}>
+
+<img src="/wildcat.png" style={{height:45}}/>
+
+<h2 style={{color:GOLD}}>
+Player Profile
+</h2>
+
+</div>
+
+<div style={{padding:40}}>
 
 <button onClick={onClose}>Back</button> <button onClick={onDelete}>Delete Player</button>
 
-<h1 style={{color:GREEN}}>{player.name}</h1>
+<h1 style={{color:GREEN}}>
+{player.name}
+</h1>
 
 <div style={{
 display:"grid",
@@ -67,7 +91,7 @@ marginTop:30
 
 <div>
 
-<h3 style={{color:GOLD}}>Player Info</h3>
+<h3 style={{color:GOLD}}>Player Information</h3>
 
 <p><b>Team:</b> {player.team}</p>
 <p><b>League:</b> {player.league}</p>
@@ -75,18 +99,43 @@ marginTop:30
 <p><b>Height:</b> {player.height}</p>
 <p><b>Weight:</b> {player.weight}</p>
 <p><b>Hand:</b> {player.hand}</p>
+<p><b>Agent:</b> {player.agent}</p>
 
 <p>
-<b>Scholarship %</b>
+
+<b>Matriculation Year:</b>
+
 <input
-type="number"
-value={scholarship}
-onChange={e=>setScholarship(e.target.value)}
-style={{marginLeft:10,width:80}}
+value={matriculation}
+onChange={e=>setMatriculation(e.target.value)}
+style={{marginLeft:10,width:100}}
 />
+
 </p>
 
-<a href={player.epLink} target="_blank">EliteProspects</a> <br/> <a href={player.instatLink} target="_blank">InStat</a>
+<p>
+
+<b>Scholarship %:</b>
+
+<input
+value={scholarship}
+onChange={e=>setScholarship(e.target.value)}
+style={{marginLeft:10,width:100}}
+/>
+
+</p>
+
+<p>
+<a href={player.epLink} target="_blank">
+EliteProspects Profile
+</a>
+</p>
+
+<p>
+<a href={player.instatLink} target="_blank">
+InStat Video
+</a>
+</p>
 
 {/* SCOUT NOTES */}
 
@@ -95,10 +144,11 @@ style={{marginLeft:10,width:80}}
 <textarea
 placeholder="Add scout note"
 onBlur={e=>addNote(e.target.value)}
+style={{width:"100%",height:60}}
 />
 
 {notes.map((n,i)=>(
-<div key={i}>
+<div key={i} style={{marginTop:8}}>
 <b>{n.date}</b>
 <div>{n.text}</div>
 </div>
@@ -112,17 +162,28 @@ onBlur={e=>addNote(e.target.value)}
 
 <h3 style={{color:GOLD}}>Game Reports</h3>
 
-<input placeholder="Opponent"
-onChange={e=>setReport({...report,opponent:e.target.value})}/>
+<input
+placeholder="Opponent"
+value={report.opponent}
+onChange={e=>setReport({...report,opponent:e.target.value})}
+/>
 
-<input type="date"
-onChange={e=>setReport({...report,date:e.target.value})}/>
+<input
+type="date"
+value={report.date}
+onChange={e=>setReport({...report,date:e.target.value})}
+/>
 
-<input placeholder="Score"
-onChange={e=>setReport({...report,score:e.target.value})}/>
+<input
+placeholder="Score"
+value={report.score}
+onChange={e=>setReport({...report,score:e.target.value})}
+/>
 
 <select
-onChange={e=>setReport({...report,rating:e.target.value})}>
+value={report.rating}
+onChange={e=>setReport({...report,rating:e.target.value})}
+>
 
 <option value="1">★</option>
 <option value="2">★★</option>
@@ -132,14 +193,20 @@ onChange={e=>setReport({...report,rating:e.target.value})}>
 
 </select>
 
-<textarea placeholder="Game notes"
-onChange={e=>setReport({...report,notes:e.target.value})}/>
+<textarea
+placeholder="Game notes"
+value={report.notes}
+onChange={e=>setReport({...report,notes:e.target.value})}
+/>
 
-<button onClick={addReport}>Add Report</button>
+<button onClick={addReport}>
+Add Report
+</button>
 
-{gameReports.map((r,i)=>(
+{reports.map((r,i)=>(
 <div key={i} style={{marginTop:10}}>
-<b>{r.opponent}</b> ({r.score})
+<b>{r.opponent}</b>
+<div>{r.score}</div>
 <div>{r.notes}</div>
 </div>
 ))}
@@ -156,7 +223,8 @@ onChange={e=>setReport({...report,notes:e.target.value})}/>
 <option>In Person</option>
 </select>
 
-<textarea id="contactNotes"
+<textarea
+id="contactNotes"
 placeholder="Contact notes"
 />
 
@@ -181,6 +249,8 @@ Add Contact
 <div>{c.notes}</div>
 </div>
 ))}
+
+</div>
 
 </div>
 
