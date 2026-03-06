@@ -1,11 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect,useState } from "react";
+import { db } from "../lib/firebase";
+import { collection,onSnapshot,addDoc,updateDoc,doc } from "firebase/firestore";
+
 import AddPlayerModal from "./AddPlayerModal";
 import PlayerProfile from "./PlayerProfile";
 import DepthChart from "./DepthChart";
 
-const LISTS = [
+const GREEN="#00563F";
+const GOLD="#CFB53B";
+
+const LISTS=[
 "Hot List",
 "Player of Interest",
 "Tracking",
@@ -14,31 +20,58 @@ const LISTS = [
 "Transfer Portal"
 ];
 
-export default function RecruitBoard() {
+export default function RecruitBoard(){
 
-const [players,setPlayers] = useState([]);
-const [showAdd,setShowAdd] = useState(false);
-const [selected,setSelected] = useState(null);
-const [showDepth,setShowDepth] = useState(false);
+const [players,setPlayers]=useState([]);
+const [showAdd,setShowAdd]=useState(false);
+const [selected,setSelected]=useState(null);
+const [showDepth,setShowDepth]=useState(false);
+const [dragPlayer,setDragPlayer]=useState(null);
 
-function addPlayer(player){
-setPlayers(p=>[...p,{...player,id:crypto.randomUUID(),status:"Tracking"}]);
-setShowAdd(false);
+const playersRef=collection(db,"players");
+
+useEffect(()=>{
+
+const unsub=onSnapshot(playersRef,(snapshot)=>{
+
+const list=snapshot.docs.map(d=>({
+id:d.id,
+...d.data()
+}));
+
+setPlayers(list);
+
+});
+
+return ()=>unsub();
+
+},[]);
+
+async function addPlayer(player){
+
+await addDoc(playersRef,{
+...player,
+status:"Tracking",
+reports:[],
+notes:[],
+contacts:[],
+scholarship:0
+});
+
 }
 
-function movePlayer(id,newStatus){
-setPlayers(players.map(p=>p.id===id?{...p,status:newStatus}:p));
+async function movePlayer(id,newStatus){
+
+await updateDoc(doc(db,"players",id),{
+status:newStatus
+});
+
 }
 
-function deletePlayer(id){
-setPlayers(players.filter(p=>p.id!==id));
-setSelected(null);
-}
-
-return (
+return(
 
 <div style={{
-background:"#00563F",
+background:GREEN,
 minHeight:"100vh",
 padding:30,
 fontFamily:"Arial"
@@ -54,15 +87,20 @@ marginBottom:30
 }}>
 
 <div style={{display:"flex",alignItems:"center",gap:15}}>
-<img src="/wildcat.png" style={{height:50}} />
-<h1 style={{color:"#CFB53B"}}>
+<img src="/wildcat.png" style={{height:50}}/>
+<h1 style={{color:GOLD}}>
 NMU Hockey Recruiting Board
 </h1>
 </div>
 
-<div style={{display:"flex",gap:12}}>
-<button onClick={()=>setShowAdd(true)}>Add Player</button>
-<button onClick={()=>setShowDepth(true)}>Depth Chart</button>
+<div style={{display:"flex",gap:10}}>
+<button onClick={()=>setShowAdd(true)}>
+Add Player
+</button>
+
+<button onClick={()=>setShowDepth(true)}>
+Depth Chart </button>
+
 </div>
 
 </div>
@@ -78,44 +116,36 @@ gap:15
 {LISTS.map(status=>(
 
 <div key={status}
+onDragOver={e=>e.preventDefault()}
+onDrop={()=>movePlayer(dragPlayer.id,status)}
 style={{
-background:"#ffffff",
+background:"#fff",
 borderRadius:8,
 padding:10,
 minHeight:350
 }}>
 
-<h3 style={{borderBottom:"2px solid #CFB53B"}}>
+<h3 style={{borderBottom:`2px solid ${GOLD}`}}>
 {status}
 </h3>
 
 {players.filter(p=>p.status===status).map(p=>(
 
 <div key={p.id}
+draggable
+onDragStart={()=>setDragPlayer(p)}
+onClick={()=>setSelected(p)}
 style={{
 border:"1px solid #ddd",
 padding:8,
 marginTop:8,
 borderRadius:6,
 cursor:"pointer"
-}}
-onClick={()=>setSelected(p)}>
+}}>
 
 <b>{p.name}</b>
 
 <div>{p.position}</div>
-
-<select
-value={p.status}
-onChange={e=>movePlayer(p.id,e.target.value)}
-style={{marginTop:5}}>
-
-{LISTS.map(s=>(
-
-<option key={s}>{s}</option>
-))}
-
-</select>
 
 </div>
 
@@ -138,7 +168,6 @@ onAdd={addPlayer}
 <PlayerProfile
 player={selected}
 onClose={()=>setSelected(null)}
-onDelete={()=>deletePlayer(selected.id)}
 />
 }
 
@@ -150,5 +179,7 @@ onClose={()=>setShowDepth(false)}
 }
 
 </div>
+
 );
+
 }
