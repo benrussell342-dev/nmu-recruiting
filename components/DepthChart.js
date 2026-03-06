@@ -7,38 +7,11 @@ const GOLD="#CFB53B";
 
 export default function DepthChart({players,onClose}){
 
-const [lines,setLines]=useState([
-{LW:null,C:null,RW:null},
-{LW:null,C:null,RW:null},
-{LW:null,C:null,RW:null},
-{LW:null,C:null,RW:null}
-]);
+const seasons=[2025,2026,2027,2028];
 
-const [pairs,setPairs]=useState([
-{LD:null,RD:null},
-{LD:null,RD:null},
-{LD:null,RD:null}
-]);
+const [season,setSeason]=useState(seasons[0]);
 
-const [goalies,setGoalies]=useState([null,null]);
-
-function assignForward(i,pos,player){
-const copy=[...lines];
-copy[i][pos]=player;
-setLines(copy);
-}
-
-function assignPair(i,pos,player){
-const copy=[...pairs];
-copy[i][pos]=player;
-setPairs(copy);
-}
-
-function assignGoalie(i,player){
-const copy=[...goalies];
-copy[i]=player;
-setGoalies(copy);
-}
+const eligible=players.filter(p=>p.matriculation);
 
 return(
 
@@ -48,117 +21,130 @@ top:0,
 left:0,
 width:"100%",
 height:"100%",
-background:"#fff",
-overflow:"auto",
-padding:40
+background:"#f4f6f7"
 }}>
+
+<div style={{
+background:GREEN,
+padding:20,
+display:"flex",
+alignItems:"center",
+gap:15
+}}>
+
+<img src="/wildcat.png" style={{height:45}}/>
+
+<h2 style={{color:GOLD}}>
+Depth Chart
+</h2>
+
+</div>
+
+<div style={{padding:40}}>
 
 <button onClick={onClose}>Back</button>
 
-<h1 style={{color:GREEN}}>NMU Depth Chart</h1>
+<h3>Season</h3>
 
-{/* FORWARDS */}
+<select
+value={season}
+onChange={e=>setSeason(e.target.value)}
 
-<h2 style={{color:GOLD}}>Forward Lines</h2>
+>
 
-{lines.map((line,i)=>(
+{seasons.map(s=>(
 
-<div key={i} style={{
+<option key={s}>{s}</option>
+))}
+
+</select>
+
+<h2 style={{marginTop:30}}>Forwards</h2>
+
+<div style={{
 display:"grid",
-gridTemplateColumns:"1fr 1fr 1fr",
-gap:10,
-marginBottom:15
+gridTemplateColumns:"repeat(3,1fr)",
+gap:10
 }}>
 
 {["LW","C","RW"].map(pos=>(
-<select
-key={pos}
-value={line[pos]?.id||""}
-onChange={e=>{
 
-const p=players.find(x=>x.id===e.target.value);
-assignForward(i,pos,p);
-
+<div key={pos} style={{
+background:"#fff",
+padding:10,
+borderRadius:8
 }}>
 
-<option value="">Select {pos}</option>
+<b>{pos}</b>
 
-{players.map(p=>(
+{eligible
+.filter(p=>p.position===pos)
+.map(p=>(
 
-<option key={p.id} value={p.id}>
-{p.name} ({p.position})
-</option>
-))}
-
-</select>
-))}
-
+<div key={p.id}>
+{p.name}
 </div>
 ))}
 
-{/* DEFENSE */}
+</div>
 
-<h2 style={{color:GOLD}}>Defense Pairs</h2>
+))}
 
-{pairs.map((pair,i)=>(
+</div>
 
-<div key={i} style={{
+<h2 style={{marginTop:30}}>Defense</h2>
+
+<div style={{
 display:"grid",
 gridTemplateColumns:"1fr 1fr",
-gap:10,
-marginBottom:15
+gap:10
 }}>
 
 {["LD","RD"].map(pos=>(
-<select
-key={pos}
-value={pair[pos]?.id||""}
-onChange={e=>{
-const p=players.find(x=>x.id===e.target.value);
-assignPair(i,pos,p);
+
+<div key={pos} style={{
+background:"#fff",
+padding:10,
+borderRadius:8
 }}>
 
-<option value="">Select {pos}</option>
+<b>{pos}</b>
 
-{players.map(p=>(
+{eligible
+.filter(p=>p.position===pos)
+.map(p=>(
 
-<option key={p.id} value={p.id}>
+<div key={p.id}>
 {p.name}
-</option>
-))}
-
-</select>
-))}
-
 </div>
 ))}
 
-{/* GOALIES */}
+</div>
 
-<h2 style={{color:GOLD}}>Goalies</h2>
+))}
 
-{goalies.map((g,i)=>(
+</div>
 
-<select key={i}
-value={g?.id||""}
-onChange={e=>{
-const p=players.find(x=>x.id===e.target.value);
-assignGoalie(i,p);
-}}
-style={{display:"block",marginBottom:10}}>
+<h2 style={{marginTop:30}}>Goalies</h2>
 
-<option value="">Select Goalie</option>
+<div style={{
+background:"#fff",
+padding:10,
+borderRadius:8
+}}>
 
-{players.map(p=>(
+{eligible
+.filter(p=>p.position==="G")
+.map(p=>(
 
-<option key={p.id} value={p.id}>
+<div key={p.id}>
 {p.name}
-</option>
+</div>
 ))}
 
-</select>
+</div>
 
-))}
+</div>
 
 </div>
 );
