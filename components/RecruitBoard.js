@@ -1,100 +1,139 @@
 "use client";
 
-import { updateDoc,doc } from "firebase/firestore";
-import { db } from "../lib/firebase";
+import { useState } from "react";
+import AddPlayerModal from "./AddPlayerModal";
+import PlayerProfile from "./PlayerProfile";
+import DepthChart from "./DepthChart";
 
-const STATUSES=[
-"Hot List",
-"Player of Interest",
-"Tracking",
-"Contacted NMU",
-"Transfer Portal",
-"Committed"
+const LISTS = [
+  "Hot List",
+  "Player of Interest",
+  "Tracking",
+  "Contacted NMU",
+  "Committed",
+  "Transfer Portal"
 ];
 
-export default function RecruitBoard({players,setSelected,openAdd,openDepth}){
+export default function RecruitBoard() {
 
-let dragPlayer=null;
+  const [players, setPlayers] = useState([]);
+  const [selectedPlayer, setSelectedPlayer] = useState(null);
+  const [showAddPlayer, setShowAddPlayer] = useState(false);
+  const [showDepthChart, setShowDepthChart] = useState(false);
 
-function dropBoard(status){
+  function addPlayer(player) {
+    setPlayers((prev) => [...prev, player]);
+    setShowAddPlayer(false);
+  }
 
-if(!dragPlayer) return;
+  function deletePlayer(id) {
+    setPlayers((prev) => prev.filter((p) => p.id !== id));
+    setSelectedPlayer(null);
+  }
 
-updateDoc(doc(db,"players",dragPlayer.id),{status});
+  function movePlayer(playerId, newStatus) {
+    setPlayers((prev) =>
+      prev.map((p) =>
+        p.id === playerId ? { ...p, status: newStatus } : p
+      )
+    );
+  }
 
-}
+  const safePlayers = Array.isArray(players) ? players : [];
 
-return(
+  return (
+    <div style={{ padding: 24 }}>
 
-<div style={{fontFamily:"Arial"}}>
+      {/* HEADER */}
+      <div style={{
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        marginBottom: 20
+      }}>
+        <h1>NMU Hockey Recruiting Board</h1>
 
-<div style={{
-background:"#005A43",
-color:"white",
-padding:20,
-display:"flex",
-justifyContent:"space-between"
-}}>
+        <div style={{ display: "flex", gap: 10 }}>
+          <button onClick={() => setShowAddPlayer(true)}>
+            Add Player
+          </button>
 
-<div style={{display:"flex",alignItems:"center",gap:10}}>
-<img src="/wildcat.png" width="40"/>
-<h2>NMU Recruiting Board</h2>
-</div>
+          <button onClick={() => setShowDepthChart(true)}>
+            Depth Chart
+          </button>
+        </div>
+      </div>
 
-<div>
-<button onClick={openDepth}>Depth Chart</button>
-<button onClick={openAdd}>Add Player</button>
-</div>
+      {/* BOARD */}
+      <div style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(6, 1fr)",
+        gap: 16
+      }}>
 
-</div>
+        {LISTS.map((status) => {
 
-<div style={{display:"flex",gap:20,padding:20}}>
+          const listPlayers =
+            safePlayers.filter((p) => p.status === status) || [];
 
-{STATUSES.map(status=>(
+          return (
+            <div
+              key={status}
+              style={{
+                border: "1px solid #ddd",
+                borderRadius: 8,
+                padding: 10,
+                minHeight: 300
+              }}
+            >
+              <h3>{status}</h3>
 
-<div key={status}
-onDragOver={e=>e.preventDefault()}
-onDrop={()=>dropBoard(status)}
-style={{background:"white",padding:10,width:230}}
->
+              {listPlayers.map((player) => (
+                <div
+                  key={player.id}
+                  style={{
+                    border: "1px solid #ccc",
+                    padding: 8,
+                    marginTop: 8,
+                    borderRadius: 6,
+                    cursor: "pointer",
+                    background: "#fafafa"
+                  }}
+                  onClick={() => setSelectedPlayer(player)}
+                >
+                  <b>{player.name}</b>
+                  <div>{player.position}</div>
+                </div>
+              ))}
+            </div>
+          );
+        })}
+      </div>
 
-<b>{status}</b>
+      {/* MODALS */}
 
-{players.filter(p=>p.status===status).map(p=>(
+      {showAddPlayer && (
+        <AddPlayerModal
+          onClose={() => setShowAddPlayer(false)}
+          onAdd={addPlayer}
+        />
+      )}
 
-<div key={p.id}
+      {selectedPlayer && (
+        <PlayerProfile
+          player={selectedPlayer}
+          onClose={() => setSelectedPlayer(null)}
+          onDelete={() => deletePlayer(selectedPlayer.id)}
+        />
+      )}
 
-draggable
-onDragStart={()=>dragPlayer=p}
-onClick={()=>setSelected(p)}
+      {showDepthChart && (
+        <DepthChart
+          players={safePlayers}
+          onClose={() => setShowDepthChart(false)}
+        />
+      )}
 
-style={{
-border:"1px solid #ccc",
-padding:8,
-marginTop:8,
-cursor:"pointer"
-}}
-
->
-
-<b>{p.name}</b>
-
-<div style={{fontSize:12}}>
-{p.team} • {p.position}
-</div>
-
-</div>
-
-))}
-
-</div>
-
-))}
-
-</div>
-
-</div>
-
-);
-
+    </div>
+  );
 }
