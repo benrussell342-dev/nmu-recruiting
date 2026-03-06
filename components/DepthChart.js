@@ -2,26 +2,26 @@
 
 import { useState } from "react";
 
-const GREEN="#00563F";
-const GOLD="#CFB53B";
+const GREEN = "#00563F";
+const GOLD = "#CFB53B";
 
-export default function DepthChart({players,onClose}){
+export default function DepthChart({ players, onClose }){
 
-const seasons=[2025,2026,2027,2028];
+const seasons=[2025,2026,2027,2028,2029];
+
 const [season,setSeason]=useState(seasons[0]);
-const [dragPlayer,setDragPlayer]=useState(null);
 
-const eligible=players.filter(p=>{
+const eligible = players.filter(p=>{
 
 if(!p.matriculation) return false;
 
-return Number(p.matriculation)<=season;
+return Number(p.matriculation) <= season;
 
 });
 
-const scholarshipUsed=eligible.reduce((total,p)=>{
+const scholarshipUsed = eligible.reduce((sum,p)=>{
 
-return total + (Number(p.scholarship)||0)/100;
+return sum + (Number(p.scholarship)||0)/100;
 
 },0);
 
@@ -60,7 +60,7 @@ Depth Chart
 
 <select
 value={season}
-onChange={e=>setSeason(e.target.value)}
+onChange={e=>setSeason(Number(e.target.value))}
 
 >
 
@@ -72,16 +72,16 @@ onChange={e=>setSeason(e.target.value)}
 </select>
 
 <h3 style={{marginTop:20}}>
+
 Scholarships Used: {scholarshipUsed.toFixed(2)} / 18
+
 </h3>
 
-<h2 style={{marginTop:30}}>Players</h2>
+<h2 style={{marginTop:30}}>Eligible Players</h2>
 
 {eligible.map(p=>(
 
 <div key={p.id}
-draggable
-onDragStart={()=>setDragPlayer(p)}
 style={{
 border:"1px solid #ccc",
 padding:8,
