@@ -8,10 +8,22 @@ const GOLD="#CFB53B";
 export default function DepthChart({players,onClose}){
 
 const seasons=[2025,2026,2027,2028];
-
 const [season,setSeason]=useState(seasons[0]);
+const [dragPlayer,setDragPlayer]=useState(null);
 
-const eligible=players.filter(p=>p.matriculation);
+const eligible=players.filter(p=>{
+
+if(!p.matriculation) return false;
+
+return Number(p.matriculation)<=season;
+
+});
+
+const scholarshipUsed=eligible.reduce((total,p)=>{
+
+return total + (Number(p.scholarship)||0)/100;
+
+},0);
 
 return(
 
@@ -59,32 +71,25 @@ onChange={e=>setSeason(e.target.value)}
 
 </select>
 
-<h2 style={{marginTop:30}}>Forwards</h2>
+<h3 style={{marginTop:20}}>
+Scholarships Used: {scholarshipUsed.toFixed(2)} / 18
+</h3>
 
-<div style={{
-display:"grid",
-gridTemplateColumns:"repeat(3,1fr)",
-gap:10
+<h2 style={{marginTop:30}}>Players</h2>
+
+{eligible.map(p=>(
+
+<div key={p.id}
+draggable
+onDragStart={()=>setDragPlayer(p)}
+style={{
+border:"1px solid #ccc",
+padding:8,
+marginTop:6,
+background:"#fff"
 }}>
 
-{["LW","C","RW"].map(pos=>(
-
-<div key={pos} style={{
-background:"#fff",
-padding:10,
-borderRadius:8
-}}>
-
-<b>{pos}</b>
-
-{eligible
-.filter(p=>p.position===pos)
-.map(p=>(
-
-<div key={p.id}>
-{p.name}
-</div>
-))}
+{p.name} ({p.position})
 
 </div>
 
@@ -92,60 +97,8 @@ borderRadius:8
 
 </div>
 
-<h2 style={{marginTop:30}}>Defense</h2>
-
-<div style={{
-display:"grid",
-gridTemplateColumns:"1fr 1fr",
-gap:10
-}}>
-
-{["LD","RD"].map(pos=>(
-
-<div key={pos} style={{
-background:"#fff",
-padding:10,
-borderRadius:8
-}}>
-
-<b>{pos}</b>
-
-{eligible
-.filter(p=>p.position===pos)
-.map(p=>(
-
-<div key={p.id}>
-{p.name}
-</div>
-))}
-
 </div>
 
-))}
-
-</div>
-
-<h2 style={{marginTop:30}}>Goalies</h2>
-
-<div style={{
-background:"#fff",
-padding:10,
-borderRadius:8
-}}>
-
-{eligible
-.filter(p=>p.position==="G")
-.map(p=>(
-
-<div key={p.id}>
-{p.name}
-</div>
-))}
-
-</div>
-
-</div>
-
-</div>
 );
+
 }
