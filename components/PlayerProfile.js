@@ -3,94 +3,95 @@
 import { useState } from "react";
 import { db } from "../lib/firebase";
 import { updateDoc, doc } from "firebase/firestore";
+import { auth } from "../lib/firebase";
 
-const GREEN = "#00563F";
-const GOLD = "#CFB53B";
+const GREEN="#00563F";
+const GOLD="#CFB53B";
 
-export default function PlayerProfile({ player, onClose }) {
+function getInitials(){
 
-const [matriculation,setMatriculation] = useState(player.matriculation || "");
-const [scholarship,setScholarship] = useState(player.scholarship || 0);
+const email = auth.currentUser?.email;
 
-const [reports,setReports] = useState(player.reports || []);
-const [notes,setNotes] = useState(player.notes || []);
-const [contacts,setContacts] = useState(player.contacts || []);
+if(email==="[dshyiak@nmu.edu](mailto:dshyiak@nmu.edu)") return "DS";
+if(email==="[acontois@nmu.edu](mailto:acontois@nmu.edu)") return "AC";
+if(email==="[pfox@nmu.edu](mailto:pfox@nmu.edu)") return "PF";
+if(email==="[cbabiak@nmu.edu](mailto:cbabiak@nmu.edu)") return "CB";
+if(email==="[berussel@nmu.edu](mailto:berussel@nmu.edu)") return "BR";
 
-const [report,setReport] = useState({
-opponent:"",
-date:"",
-score:"",
-rating:3,
-notes:""
-});
+return "??";
 
-const [contact,setContact] = useState({
-type:"Call",
-notes:""
-});
+}
 
-async function savePlayer(){
+export default function PlayerProfile({player,onClose}){
+
+const [reports,setReports]=useState(player.reports||[]);
+const [notes,setNotes]=useState(player.notes||[]);
+const [contacts,setContacts]=useState(player.contacts||[]);
+
+const [showReports,setShowReports]=useState(true);
+const [showNotes,setShowNotes]=useState(true);
+const [showContacts,setShowContacts]=useState(true);
+const [showTimeline,setShowTimeline]=useState(true);
+
+async function save(){
 
 await updateDoc(doc(db,"players",player.id),{
 
-matriculation,
-scholarship,
 reports,
 notes,
 contacts
 
 });
 
-alert("Player saved");
-
-}
-
-function addReport(){
-
-setReports([
-...reports,
-report
-]);
-
-setReport({
-opponent:"",
-date:"",
-score:"",
-rating:3,
-notes:""
-});
+alert("Saved");
 
 }
 
 function addNote(text){
 
-setNotes([
-...notes,
-{
+setNotes([...notes,{
 text,
-date:new Date().toLocaleDateString()
-}
-]);
+date:new Date().toLocaleDateString(),
+initials:getInitials()
+}]);
 
 }
 
-function addContact(){
+function addReport(text){
 
-setContacts([
-...contacts,
-{
-type:contact.type,
-notes:contact.notes,
-date:new Date().toLocaleDateString()
-}
-]);
-
-setContact({
-type:"Call",
-notes:""
-});
+setReports([...reports,{
+text,
+date:new Date().toLocaleDateString(),
+initials:getInitials()
+}]);
 
 }
+
+function addContact(text){
+
+setContacts([...contacts,{
+text,
+date:new Date().toLocaleDateString(),
+initials:getInitials()
+}]);
+
+}
+
+function deleteEntry(list,setList,index){
+
+const copy=[...list];
+copy.splice(index,1);
+setList(copy);
+
+}
+
+const timeline=[
+
+...reports.map(r=>({...r,type:"Game Report"})),
+...notes.map(n=>({...n,type:"Scout Note"})),
+...contacts.map(c=>({...c,type:"Contact Log"}))
+
+].sort((a,b)=>new Date(b.date)-new Date(a.date));
 
 return(
 
@@ -103,8 +104,6 @@ height:"100%",
 background:"#f4f6f7",
 overflow:"auto"
 }}>
-
-{/* HEADER */}
 
 <div style={{
 background:GREEN,
@@ -130,178 +129,157 @@ Player Profile
 {player.name}
 </h1>
 
-<div style={{
-display:"grid",
-gridTemplateColumns:"1fr 1fr",
-gap:40,
-marginTop:30
-}}>
+{/* Activity Timeline */}
 
-{/* LEFT COLUMN */}
+<h3 onClick={()=>setShowTimeline(!showTimeline)}
+style={{cursor:"pointer",color:GOLD}}>
+Activity Timeline
+</h3>
+
+{showTimeline && (
 
 <div>
 
-<h3 style={{color:GOLD}}>Player Information</h3>
+{timeline.map((t,i)=>(
 
-<p><b>Team:</b> {player.team}</p>
-<p><b>League:</b> {player.league}</p>
-<p><b>Position:</b> {player.position}</p>
-<p><b>Height:</b> {player.height}</p>
-<p><b>Weight:</b> {player.weight}</p>
+<div key={i} style={{
+border:"1px solid #ddd",
+padding:10,
+marginTop:8,
+background:"#fff"
+}}>
 
-<p>
+<b>{t.date} ({t.initials})</b>
 
-<b>Matriculation Year</b>
+<div style={{fontWeight:"bold"}}>
+{t.type}
+</div>
 
-<input
-value={matriculation}
-onChange={e=>setMatriculation(e.target.value)}
-style={{marginLeft:10}}
-/>
+<div>{t.text}</div>
 
-</p>
+</div>
 
-<p>
+))}
 
-<b>Scholarship %</b>
+</div>
 
-<input
-type="number"
-value={scholarship}
-onChange={e=>setScholarship(e.target.value)}
-style={{marginLeft:10}}
-/>
+)}
 
-</p>
+{/* Scout Notes */}
 
-<a href={player.epLink} target="_blank">
-EliteProspects Profile
-</a>
-
-<h3 style={{color:GOLD,marginTop:30}}>
+<h3 onClick={()=>setShowNotes(!showNotes)}
+style={{cursor:"pointer",color:GOLD}}>
 Scout Notes
 </h3>
+
+{showNotes && (
+
+<div>
 
 <textarea
 placeholder="Add scout note"
 onBlur={e=>addNote(e.target.value)}
-style={{width:"100%",height:60}}
 />
 
 {notes.map((n,i)=>(
 
-<div key={i} style={{marginTop:8}}>
-<b>{n.date}</b>
+<div key={i} style={{marginTop:10}}>
+
+<b>{n.date} ({n.initials})</b>
+
 <div>{n.text}</div>
+
+<button onClick={()=>deleteEntry(notes,setNotes,i)}>
+Delete
+</button>
+
 </div>
 
 ))}
 
 </div>
 
-{/* RIGHT COLUMN */}
+)}
 
-<div>
+{/* Game Reports */}
 
-<h3 style={{color:GOLD}}>
+<h3 onClick={()=>setShowReports(!showReports)}
+style={{cursor:"pointer",color:GOLD}}>
 Game Reports
 </h3>
 
-<input
-placeholder="Opponent"
-value={report.opponent}
-onChange={e=>setReport({...report,opponent:e.target.value})}
-/>
+{showReports && (
 
-<input
-type="date"
-value={report.date}
-onChange={e=>setReport({...report,date:e.target.value})}
-/>
-
-<input
-placeholder="Score"
-value={report.score}
-onChange={e=>setReport({...report,score:e.target.value})}
-/>
-
-<select
-value={report.rating}
-onChange={e=>setReport({...report,rating:e.target.value})}
->
-
-<option value="1">★</option>
-<option value="2">★★</option>
-<option value="3">★★★</option>
-<option value="4">★★★★</option>
-<option value="5">★★★★★</option>
-
-</select>
+<div>
 
 <textarea
-placeholder="Game Notes"
-value={report.notes}
-onChange={e=>setReport({...report,notes:e.target.value})}
+placeholder="Add report"
+onBlur={e=>addReport(e.target.value)}
 />
-
-<button onClick={addReport}>
-Add Game Report
-</button>
 
 {reports.map((r,i)=>(
 
 <div key={i} style={{marginTop:10}}>
-<b>{r.opponent}</b> ({r.score})
-<div>{r.notes}</div>
+
+<b>{r.date} ({r.initials})</b>
+
+<div>{r.text}</div>
+
+<button onClick={()=>deleteEntry(reports,setReports,i)}>
+Delete
+</button>
+
 </div>
 
 ))}
 
-<h3 style={{color:GOLD,marginTop:30}}>
+</div>
+
+)}
+
+{/* Contact Log */}
+
+<h3 onClick={()=>setShowContacts(!showContacts)}
+style={{cursor:"pointer",color:GOLD}}>
 Contact Log
 </h3>
 
-<select
-value={contact.type}
-onChange={e=>setContact({...contact,type:e.target.value})}
->
+{showContacts && (
 
-<option>Call</option>
-<option>Text</option>
-<option>Email</option>
-<option>Zoom</option>
-<option>In Person</option>
-
-</select>
+<div>
 
 <textarea
-placeholder="Contact notes"
-value={contact.notes}
-onChange={e=>setContact({...contact,notes:e.target.value})}
+placeholder="Add contact"
+onBlur={e=>addContact(e.target.value)}
 />
-
-<button onClick={addContact}>
-Add Contact
-</button>
 
 {contacts.map((c,i)=>(
 
-<div key={i}>
-<b>{c.date}</b> — {c.type}
-<div>{c.notes}</div>
+<div key={i} style={{marginTop:10}}>
+
+<b>{c.date} ({c.initials})</b>
+
+<div>{c.text}</div>
+
+<button onClick={()=>deleteEntry(contacts,setContacts,i)}>
+Delete
+</button>
+
 </div>
 
 ))}
 
 </div>
 
-</div>
+)}
 
 <button
 style={{marginTop:30}}
-onClick={savePlayer}
+onClick={save}
 >
-Save Player Data
+
+Save Changes
+
 </button>
 
 </div>
