@@ -2,7 +2,7 @@
 
 import { useEffect,useState } from "react";
 import { db } from "../lib/firebase";
-import { collection,onSnapshot,addDoc,updateDoc,doc } from "firebase/firestore";
+import { collection,onSnapshot,updateDoc,doc } from "firebase/firestore";
 
 import AddPlayerModal from "./AddPlayerModal";
 import PlayerProfile from "./PlayerProfile";
@@ -28,15 +28,13 @@ const [selected,setSelected]=useState(null);
 const [showDepth,setShowDepth]=useState(false);
 const [dragPlayer,setDragPlayer]=useState(null);
 
-const playersRef=collection(db,"players");
-
 useEffect(()=>{
 
-const unsub=onSnapshot(playersRef,(snapshot)=>{
+const unsub = onSnapshot(collection(db,"players"),(snapshot)=>{
 
-const list=snapshot.docs.map(d=>({
-id:d.id,
-...d.data()
+const list = snapshot.docs.map(doc=>({
+id:doc.id,
+...doc.data()
 }));
 
 setPlayers(list);
@@ -46,19 +44,6 @@ setPlayers(list);
 return ()=>unsub();
 
 },[]);
-
-async function addPlayer(player){
-
-await addDoc(playersRef,{
-...player,
-status:"Tracking",
-reports:[],
-notes:[],
-contacts:[],
-scholarship:0
-});
-
-}
 
 async function movePlayer(id,newStatus){
 
@@ -158,24 +143,15 @@ cursor:"pointer"
 </div>
 
 {showAdd &&
-<AddPlayerModal
-onClose={()=>setShowAdd(false)}
-onAdd={addPlayer}
-/>
+<AddPlayerModal onClose={()=>setShowAdd(false)} />
 }
 
 {selected &&
-<PlayerProfile
-player={selected}
-onClose={()=>setSelected(null)}
-/>
+<PlayerProfile player={selected} onClose={()=>setSelected(null)} />
 }
 
 {showDepth &&
-<DepthChart
-players={players}
-onClose={()=>setShowDepth(false)}
-/>
+<DepthChart players={players} onClose={()=>setShowDepth(false)} />
 }
 
 </div>
