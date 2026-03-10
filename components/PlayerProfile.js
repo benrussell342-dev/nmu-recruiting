@@ -54,33 +54,31 @@ contacts
 alert("Saved");
 }
 
-function getIcon(type){
-
+function icon(type){
 if(type==="Game Report") return "📊";
 if(type==="Scout Note") return "📝";
 if(type==="Contact Log") return "📞";
-
 return "";
 }
 
-async function deleteTimelineItem(item){
+async function deleteItem(item){
 
-let newReports = reports;
-let newNotes = notes;
-let newContacts = contacts;
+let newReports=[...reports];
+let newNotes=[...notes];
+let newContacts=[...contacts];
 
 if(item.type==="Game Report"){
-newReports = reports.filter(r=>r.id!==item.id);
+newReports=newReports.filter(r=>r.id!==item.id);
 setReports(newReports);
 }
 
 if(item.type==="Scout Note"){
-newNotes = notes.filter(n=>n.id!==item.id);
+newNotes=newNotes.filter(n=>n.id!==item.id);
 setNotes(newNotes);
 }
 
 if(item.type==="Contact Log"){
-newContacts = contacts.filter(c=>c.id!==item.id);
+newContacts=newContacts.filter(c=>c.id!==item.id);
 setContacts(newContacts);
 }
 
@@ -94,11 +92,13 @@ contacts:newContacts
 
 function addReport(){
 
-setReports([...reports,{
+const newItem={
 id:Date.now(),
 type:"Game Report",
 ...reportForm
-}]);
+};
+
+setReports([...reports,newItem]);
 
 setReportForm({
 coach:"",
@@ -113,11 +113,13 @@ notes:""
 
 function addNote(){
 
-setNotes([...notes,{
+const newItem={
 id:Date.now(),
 type:"Scout Note",
 ...noteForm
-}]);
+};
+
+setNotes([...notes,newItem]);
 
 setNoteForm({
 coach:"",
@@ -129,11 +131,13 @@ notes:""
 
 function addContact(){
 
-setContacts([...contacts,{
+const newItem={
 id:Date.now(),
 type:"Contact Log",
 ...contactForm
-}]);
+};
+
+setContacts([...contacts,newItem]);
 
 setContactForm({
 coach:"",
@@ -144,13 +148,8 @@ notes:""
 
 }
 
-const timeline=[
-
-...reports,
-...notes,
-...contacts
-
-].sort((a,b)=>new Date(b.date)-new Date(a.date));
+const timeline=[...reports,...notes,...contacts]
+.sort((a,b)=>new Date(b.date)-new Date(a.date));
 
 return(
 
@@ -292,7 +291,7 @@ position:"relative"
 <b>{t.coach} — {t.date}</b>
 
 <div>
-<b>{getIcon(t.type)} {t.type}</b>
+<b>{icon(t.type)} {t.type}</b>
 </div>
 
 <div>{t.notes || t.score}</div>
@@ -300,18 +299,22 @@ position:"relative"
 <button
 onClick={(e)=>{
 e.stopPropagation();
-deleteTimelineItem(t);
+deleteItem(t);
 }}
 style={{
 position:"absolute",
-top:5,
-right:8,
-cursor:"pointer"
+top:6,
+right:10,
+border:"none",
+background:"transparent",
+cursor:"pointer",
+color:"#c00",
+fontWeight:"bold"
 }}
 
 >
 
-Delete </button>
+✕ </button>
 
 </div>
 
@@ -356,7 +359,8 @@ onChange={e=>setReportForm({...reportForm,rating:e.target.value})}
 <option value="5">★★★★★</option>
 </select>
 
-<textarea placeholder="Report Notes"
+<textarea
+placeholder="Report Notes"
 value={reportForm.notes}
 onChange={e=>setReportForm({...reportForm,notes:e.target.value})}
 />
