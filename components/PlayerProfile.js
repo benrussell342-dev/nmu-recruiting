@@ -54,6 +54,15 @@ contacts
 alert("Saved");
 }
 
+function getIcon(type){
+
+if(type==="Game Report") return "📊";
+if(type==="Scout Note") return "📝";
+if(type==="Contact Log") return "📞";
+
+return "";
+}
+
 async function deleteTimelineItem(item){
 
 let newReports = reports;
@@ -61,17 +70,17 @@ let newNotes = notes;
 let newContacts = contacts;
 
 if(item.type==="Game Report"){
-newReports = reports.filter(r => r !== item);
+newReports = reports.filter(r=>r.id!==item.id);
 setReports(newReports);
 }
 
 if(item.type==="Scout Note"){
-newNotes = notes.filter(n => n !== item);
+newNotes = notes.filter(n=>n.id!==item.id);
 setNotes(newNotes);
 }
 
 if(item.type==="Contact Log"){
-newContacts = contacts.filter(c => c !== item);
+newContacts = contacts.filter(c=>c.id!==item.id);
 setContacts(newContacts);
 }
 
@@ -86,6 +95,7 @@ contacts:newContacts
 function addReport(){
 
 setReports([...reports,{
+id:Date.now(),
 type:"Game Report",
 ...reportForm
 }]);
@@ -104,6 +114,7 @@ notes:""
 function addNote(){
 
 setNotes([...notes,{
+id:Date.now(),
 type:"Scout Note",
 ...noteForm
 }]);
@@ -119,6 +130,7 @@ notes:""
 function addContact(){
 
 setContacts([...contacts,{
+id:Date.now(),
 type:"Contact Log",
 ...contactForm
 }]);
@@ -129,15 +141,6 @@ type:"Call",
 date:"",
 notes:""
 });
-
-}
-
-function getIcon(type){
-
-if(type==="Game Report") return "📊";
-if(type==="Scout Note") return "📝";
-if(type==="Contact Log") return "📞";
-return "";
 
 }
 
@@ -199,13 +202,7 @@ onChange={e=>setPlayerData({...playerData,name:e.target.value})}
 <h2 style={{color:GREEN}}>{playerData.name}</h2>
 }
 
-<span
-onClick={()=>setEdit(true)}
-style={{cursor:"pointer"}}
-
->
-
-✏️ </span>
+<span onClick={()=>setEdit(true)} style={{cursor:"pointer"}}>✏️</span>
 
 </div>
 
@@ -261,12 +258,7 @@ onChange={e=>setPlayerData({...playerData,[key]:e.target.value})}
 
 </div>
 
-{edit && (
-
-<button onClick={saveProfile}>
-Save Profile
-</button>
-
+{edit && ( <button onClick={saveProfile}>Save Profile</button>
 )}
 
 <button style={{marginTop:15}} onClick={onClose}>
@@ -288,7 +280,7 @@ Activity Timeline
 
 {showTimeline && timeline.map((t,i)=>(
 
-<div key={i}
+<div key={t.id || i}
 style={{
 background:"#fff",
 border:"1px solid #ddd",
@@ -331,26 +323,22 @@ Delete </button>
 
 <div style={{background:"#fff",padding:15}}>
 
-<input
-placeholder="Coach"
+<input placeholder="Coach"
 value={reportForm.coach}
 onChange={e=>setReportForm({...reportForm,coach:e.target.value})}
 />
 
-<input
-type="date"
+<input type="date"
 value={reportForm.date}
 onChange={e=>setReportForm({...reportForm,date:e.target.value})}
 />
 
-<input
-placeholder="Opponent"
+<input placeholder="Opponent"
 value={reportForm.opponent}
 onChange={e=>setReportForm({...reportForm,opponent:e.target.value})}
 />
 
-<input
-placeholder="Final Score"
+<input placeholder="Final Score"
 value={reportForm.score}
 onChange={e=>setReportForm({...reportForm,score:e.target.value})}
 />
@@ -366,11 +354,9 @@ onChange={e=>setReportForm({...reportForm,rating:e.target.value})}
 <option value="3">★★★☆☆</option>
 <option value="4">★★★★☆</option>
 <option value="5">★★★★★</option>
-
 </select>
 
-<textarea
-placeholder="Report Notes"
+<textarea placeholder="Report Notes"
 value={reportForm.notes}
 onChange={e=>setReportForm({...reportForm,notes:e.target.value})}
 />
@@ -385,20 +371,17 @@ onChange={e=>setReportForm({...reportForm,notes:e.target.value})}
 
 <div style={{background:"#fff",padding:15}}>
 
-<input
-placeholder="Coach"
+<input placeholder="Coach"
 value={noteForm.coach}
 onChange={e=>setNoteForm({...noteForm,coach:e.target.value})}
 />
 
-<input
-type="date"
+<input type="date"
 value={noteForm.date}
 onChange={e=>setNoteForm({...noteForm,date:e.target.value})}
 />
 
-<textarea
-placeholder="Notes"
+<textarea placeholder="Notes"
 value={noteForm.notes}
 onChange={e=>setNoteForm({...noteForm,notes:e.target.value})}
 />
@@ -413,8 +396,7 @@ onChange={e=>setNoteForm({...noteForm,notes:e.target.value})}
 
 <div style={{background:"#fff",padding:15}}>
 
-<input
-placeholder="Coach"
+<input placeholder="Coach"
 value={contactForm.coach}
 onChange={e=>setContactForm({...contactForm,coach:e.target.value})}
 />
@@ -423,23 +405,19 @@ onChange={e=>setContactForm({...contactForm,coach:e.target.value})}
 value={contactForm.type}
 onChange={e=>setContactForm({...contactForm,type:e.target.value})}
 >
-
 <option>Call</option>
 <option>Text</option>
 <option>Email</option>
 <option>Zoom</option>
 <option>Visit</option>
-
 </select>
 
-<input
-type="date"
+<input type="date"
 value={contactForm.date}
 onChange={e=>setContactForm({...contactForm,date:e.target.value})}
 />
 
-<textarea
-placeholder="Notes"
+<textarea placeholder="Notes"
 value={contactForm.notes}
 onChange={e=>setContactForm({...contactForm,notes:e.target.value})}
 />
@@ -448,10 +426,7 @@ onChange={e=>setContactForm({...contactForm,notes:e.target.value})}
 
 </div>
 
-<button
-style={{marginTop:30}}
-onClick={saveSections}
->
+<button style={{marginTop:30}} onClick={saveSections}>
 Save Updates
 </button>
 
