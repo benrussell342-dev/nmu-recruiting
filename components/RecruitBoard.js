@@ -24,7 +24,9 @@ export default function RecruitBoard(){
 const [players,setPlayers]=useState([]);
 const [showAdd,setShowAdd]=useState(false);
 const [selected,setSelected]=useState(null);
-const [dragPlayer,setDragPlayer]=useState(null);
+const [search,setSearch]=useState("");
+const [sort,setSort]=useState("birthYear");
+const [showArchive,setShowArchive]=useState(false);
 
 useEffect(()=>{
 
@@ -45,43 +47,79 @@ return ()=>unsub();
 
 async function movePlayer(id,newStatus){
 
-await updateDoc(doc(db,"players",id),{
-status:newStatus
+await updateDoc(doc(db,"players",id),{status:newStatus});
+
+}
+
+async function toggleHighlight(p){
+
+await updateDoc(doc(db,"players",p.id),{
+highlight:!p.highlight
 });
 
 }
 
-async function deletePlayer(id){
+async function archivePlayer(id){
 
-if(!confirm("Delete player?")) return;
-
-await deleteDoc(doc(db,"players",id));
+await updateDoc(doc(db,"players",id),{
+archived:true
+});
 
 }
+
+async function restorePlayer(id){
+
+await updateDoc(doc(db,"players",id),{
+archived:false
+});
+
+}
+
+function sortPlayers(list){
+
+if(sort==="birthYear"){
+
+return list.sort((a,b)=>a.birthYear-b.birthYear);
+
+}
+
+if(sort==="position"){
+
+return list.sort((a,b)=>a.position.localeCompare(b.position));
+
+}
+
+return list;
+
+}
+
+const filtered=players.filter(p=>
+p.name?.toLowerCase().includes(search.toLowerCase())
+);
 
 return(
 
 <div style={{
 background:GREEN,
 minHeight:"100vh",
-padding:30,
-fontFamily:"Arial"
+padding:30
 }}>
 
-<div style={{
-display:"flex",
-justifyContent:"space-between",
-alignItems:"center",
-marginBottom:30
-}}>
+<div style={{display:"flex",gap:20}}>
 
-<div style={{display:"flex",alignItems:"center",gap:15}}>
-<img src="/wildcat.png" style={{height:50}}/>
+<input
+placeholder="Search player"
+onChange={e=>setSearch(e.target.value)}
+/>
 
-<h1 style={{color:GOLD}}>
-NMU Hockey Recruiting Board
-</h1>
-</div>
+<select onChange={e=>setSort(e.target.value)}>
+
+<option value="birthYear">Sort by BirthYear</option>
+<option value="position">Sort by Position</option>
+</select>
+
+<button onClick={()=>setShowArchive(!showArchive)}>
+Archive </button>
 
 <button onClick={()=>setShowAdd(true)}>
 Add Player </button>
@@ -91,71 +129,48 @@ Add Player </button>
 <div style={{
 display:"grid",
 gridTemplateColumns:"repeat(6,1fr)",
-gap:20
+gap:20,
+marginTop:30
 }}>
 
 {LISTS.map(status=>(
 
-<div key={status}
+<div key={status} style={{background:"#fff",padding:10}}>
 
-onDragOver={e=>e.preventDefault()}
+<h3>{status}</h3>
 
-onDrop={()=>movePlayer(dragPlayer?.id,status)}
-
-style={{
-background:"#ffffff",
-borderRadius:8,
-padding:10,
-minHeight:350
-}}>
-
-<h3 style={{borderBottom:`2px solid ${GOLD}`}}>
-{status}
-</h3>
-
-{players.filter(p=>p.status===status).map(p=>(
+{sortPlayers(
+filtered.filter(p=>p.status===status && !p.archived)
+).map(p=>(
 
 <div key={p.id}
 
-draggable
-
-onDragStart={()=>setDragPlayer(p)}
-
 onClick={()=>setSelected(p)}
+
+onDoubleClick={()=>toggleHighlight(p)}
 
 style={{
 border:"1px solid #ddd",
 padding:8,
 marginTop:8,
-borderRadius:6,
-cursor:"pointer",
-position:"relative"
-}}>
-
-<b>{p.name}</b>
-
-<div>{p.position}</div>
-
-<div
-
-onClick={(e)=>{
-e.stopPropagation();
-deletePlayer(p.id);
-}}
-
-style={{
-position:"absolute",
-bottom:5,
-right:5,
-fontSize:18,
-cursor:"pointer"
+background:p.highlight?"yellow":"white"
 }}
 
 >
 
-🗑
+<b>{p.name}</b>
 
-</div>
+<div>{p.position} • {p.birthYear}</div>
+
+<button
+onClick={(e)=>{
+e.stopPropagation();
+archivePlayer(p.id);
+}}
+
+>
+
+Archive </button>
 
 </div>
 
@@ -167,13 +182,32 @@ cursor:"pointer"
 
 </div>
 
-{showAdd &&
-<AddPlayerModal onClose={()=>setShowAdd(false)} />
-}
+{showArchive && (
 
-{selected &&
-<PlayerProfile player={selected} onClose={()=>setSelected(null)} />
-}
+<div style={{marginTop:40,background:"#fff",padding:20}}>
+
+<h2>Archived Players</h2>
+
+{players.filter(p=>p.archived).map(p=>(
+
+<div key={p.id}>
+
+{p.name}
+
+<button onClick={()=>restorePlayer(p.id)}>
+Restore </button>
+
+</div>
+
+))}
+
+</div>
+
+)}
+
+{showAdd && <AddPlayerModal onClose={()=>setShowAdd(false)} />}
+
+{selected && <PlayerProfile player={selected} onClose={()=>setSelected(null)} />}
 
 </div>
 
