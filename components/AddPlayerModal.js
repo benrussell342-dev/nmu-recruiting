@@ -4,26 +4,25 @@ import { useState } from "react";
 import { db } from "../lib/firebase";
 import { collection, addDoc } from "firebase/firestore";
 
-export default function AddPlayerModal({ onClose }) {
+const GREEN="#00563F";
 
-const [name,setName] = useState("");
-const [team,setTeam] = useState("");
-const [league,setLeague] = useState("");
-const [position,setPosition] = useState("C");
+export default function AddPlayerModal({onClose}){
 
-async function addPlayer(){
+const [form,setForm]=useState({
+name:"",
+team:"",
+league:"",
+position:"C"
+});
 
-if(!name){
-alert("Player must have a name");
-return;
-}
+async function submit(){
 
 await addDoc(collection(db,"players"),{
 
-name,
-team,
-league,
-position,
+name:form.name,
+team:form.team,
+league:form.league,
+position:form.position,
 
 status:"Tracking",
 
@@ -48,7 +47,7 @@ top:0,
 left:0,
 width:"100%",
 height:"100%",
-background:"rgba(0,0,0,0.5)",
+background:"rgba(0,0,0,0.6)",
 display:"flex",
 justifyContent:"center",
 alignItems:"center"
@@ -58,27 +57,42 @@ alignItems:"center"
 background:"#fff",
 padding:30,
 width:400,
-borderRadius:8
+borderRadius:10
 }}>
 
-<h2>Add Player</h2>
+<h2 style={{color:GREEN}}>
+Add Player
+</h2>
 
 <input
+
 placeholder="Name"
-onChange={(e)=>setName(e.target.value)}
+
+onChange={e=>setForm({...form,name:e.target.value})}
+
 />
 
 <input
+
 placeholder="Team"
-onChange={(e)=>setTeam(e.target.value)}
+
+onChange={e=>setForm({...form,team:e.target.value})}
+
 />
 
 <input
+
 placeholder="League"
-onChange={(e)=>setLeague(e.target.value)}
+
+onChange={e=>setForm({...form,league:e.target.value})}
+
 />
 
-<select onChange={(e)=>setPosition(e.target.value)}>
+<select
+
+onChange={e=>setForm({...form,position:e.target.value})}
+
+>
 
 <option>C</option>
 <option>LW</option>
@@ -91,7 +105,7 @@ onChange={(e)=>setLeague(e.target.value)}
 
 <div style={{marginTop:20}}>
 
-<button onClick={addPlayer}>
+<button onClick={submit}>
 Add Player
 </button>
 
