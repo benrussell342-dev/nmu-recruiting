@@ -3,24 +3,9 @@
 import { useState } from "react";
 import { db } from "../lib/firebase";
 import { updateDoc, doc } from "firebase/firestore";
-import { auth } from "../lib/firebase";
 
 const GREEN="#00563F";
 const GOLD="#CFB53B";
-
-function getInitials(){
-
-const email=auth.currentUser?.email?.toLowerCase();
-
-if(email==="[dshyiak@nmu.edu](mailto:dshyiak@nmu.edu)") return "DS";
-if(email==="[acontois@nmu.edu](mailto:acontois@nmu.edu)") return "AC";
-if(email==="[pfox@nmu.edu](mailto:pfox@nmu.edu)") return "PF";
-if(email==="[cbabiak@nmu.edu](mailto:cbabiak@nmu.edu)") return "CB";
-if(email==="[berussel@nmu.edu](mailto:berussel@nmu.edu)") return "BR";
-
-return "NA";
-
-}
 
 export default function PlayerProfile({player,onClose}){
 
@@ -34,6 +19,7 @@ const [showNotes,setShowNotes]=useState(true);
 const [showContacts,setShowContacts]=useState(true);
 
 const [reportForm,setReportForm]=useState({
+coach:"",
 date:"",
 opponent:"",
 score:"",
@@ -42,11 +28,13 @@ notes:""
 });
 
 const [noteForm,setNoteForm]=useState({
+coach:"",
 date:"",
 notes:""
 });
 
 const [contactForm,setContactForm]=useState({
+coach:"",
 date:"",
 type:"Call",
 notes:""
@@ -67,11 +55,11 @@ alert("Saved");
 function addReport(){
 
 setReports([...reports,{
-...reportForm,
-initials:getInitials()
+...reportForm
 }]);
 
 setReportForm({
+coach:"",
 date:"",
 opponent:"",
 score:"",
@@ -84,22 +72,29 @@ notes:""
 function addNote(){
 
 setNotes([...notes,{
-...noteForm,
-initials:getInitials()
+...noteForm
 }]);
 
-setNoteForm({date:"",notes:""});
+setNoteForm({
+coach:"",
+date:"",
+notes:""
+});
 
 }
 
 function addContact(){
 
 setContacts([...contacts,{
-...contactForm,
-initials:getInitials()
+...contactForm
 }]);
 
-setContactForm({date:"",type:"Call",notes:""});
+setContactForm({
+coach:"",
+date:"",
+type:"Call",
+notes:""
+});
 
 }
 
@@ -107,7 +102,7 @@ const timeline=[
 
 ...reports.map(r=>({...r,type:"Game Report"})),
 ...notes.map(n=>({...n,type:"Scout Note"})),
-...contacts.map(c=>({...c,type:"Contact"}))
+...contacts.map(c=>({...c,type:"Contact Log"}))
 
 ].sort((a,b)=>new Date(b.date)-new Date(a.date));
 
@@ -200,9 +195,9 @@ border:"1px solid #ddd",
 padding:12,
 marginTop:8
 }}>
-<b>{t.date} ({t.initials})</b>
-<div>{t.type}</div>
-<div>{t.notes||t.score||""}</div>
+<b>{t.coach} — {t.date}</b>
+<div><b>{t.type}</b></div>
+<div>{t.notes || t.score || ""}</div>
 </div>
 ))}
 
@@ -218,6 +213,12 @@ Game Reports
 {showReports && (
 
 <div style={{background:"#fff",padding:15}}>
+
+<input
+placeholder="Coach"
+value={reportForm.coach}
+onChange={e=>setReportForm({...reportForm,coach:e.target.value})}
+/>
 
 <input
 type="date"
@@ -277,6 +278,12 @@ Scout Notes
 <div style={{background:"#fff",padding:15}}>
 
 <input
+placeholder="Coach"
+value={noteForm.coach}
+onChange={e=>setNoteForm({...noteForm,coach:e.target.value})}
+/>
+
+<input
 type="date"
 value={noteForm.date}
 onChange={e=>setNoteForm({...noteForm,date:e.target.value})}
@@ -306,6 +313,12 @@ Contact Log
 {showContacts && (
 
 <div style={{background:"#fff",padding:15}}>
+
+<input
+placeholder="Coach"
+value={contactForm.coach}
+onChange={e=>setContactForm({...contactForm,coach:e.target.value})}
+/>
 
 <input
 type="date"
