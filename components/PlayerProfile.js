@@ -59,19 +59,32 @@ alert("Saved");
 
 }
 
-function deleteTimelineItem(item){
+async function deleteTimelineItem(item){
 
-if(item.type==="Game Report"){
-setReports(reports.filter(r=>r!==item));
+let newReports = reports;
+let newNotes = notes;
+let newContacts = contacts;
+
+if(item.type === "Game Report"){
+newReports = reports.filter(r => r !== item);
+setReports(newReports);
 }
 
-if(item.type==="Scout Note"){
-setNotes(notes.filter(n=>n!==item));
+if(item.type === "Scout Note"){
+newNotes = notes.filter(n => n !== item);
+setNotes(newNotes);
 }
 
-if(item.type==="Contact Log"){
-setContacts(contacts.filter(c=>c!==item));
+if(item.type === "Contact Log"){
+newContacts = contacts.filter(c => c !== item);
+setContacts(newContacts);
 }
+
+await updateDoc(doc(db,"players",player.id),{
+reports:newReports,
+notes:newNotes,
+contacts:newContacts
+});
 
 }
 
@@ -287,16 +300,19 @@ position:"relative"
 <div>{t.notes || t.score}</div>
 
 <button
-onClick={()=>deleteTimelineItem(t)}
+onClick={(e)=>{
+e.stopPropagation();
+deleteTimelineItem(t);
+}}
 style={{
 position:"absolute",
 top:5,
-right:8
+right:8,
+cursor:"pointer"
 }}
-
 >
-
-Delete </button>
+Delete
+</button>
 
 </div>
 
@@ -441,3 +457,4 @@ Save Updates
 );
 
 }
+
