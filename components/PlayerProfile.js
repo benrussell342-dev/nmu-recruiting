@@ -34,6 +34,7 @@ notes:""
 });
 
 const [contactForm,setContactForm]=useState({
+coach:"",
 type:"Call",
 date:"",
 notes:""
@@ -55,6 +56,22 @@ contacts
 });
 
 alert("Saved");
+
+}
+
+function deleteTimelineItem(item){
+
+if(item.type==="Game Report"){
+setReports(reports.filter(r=>r!==item));
+}
+
+if(item.type==="Scout Note"){
+setNotes(notes.filter(n=>n!==item));
+}
+
+if(item.type==="Contact Log"){
+setContacts(contacts.filter(c=>c!==item));
+}
 
 }
 
@@ -99,6 +116,7 @@ type:"Contact Log",
 }]);
 
 setContactForm({
+coach:"",
 type:"Call",
 date:"",
 notes:""
@@ -153,7 +171,16 @@ padding:40
 
 <div style={{display:"flex",alignItems:"center",gap:10}}>
 
+{edit
+?
+<input
+value={playerData.name}
+onChange={e=>setPlayerData({...playerData,name:e.target.value})}
+/>
+:
+
 <h2 style={{color:GREEN}}>{playerData.name}</h2>
+}
 
 <span
 onClick={()=>setEdit(true)}
@@ -165,7 +192,7 @@ style={{cursor:"pointer"}}
 
 </div>
 
-<div style={{marginTop:15,lineHeight:1.5}}>
+<div style={{marginTop:12,lineHeight:1.25}}>
 
 {[
 ["Team","team"],
@@ -178,7 +205,7 @@ style={{cursor:"pointer"}}
 ["Agent","agent"]
 ].map(([label,key])=>(
 
-<div key={key} style={{marginBottom:6}}>
+<div key={key} style={{marginBottom:4}}>
 
 <b>{label}</b>
 
@@ -197,18 +224,22 @@ onChange={e=>setPlayerData({...playerData,[key]:e.target.value})}
 
 ))}
 
-<div style={{marginBottom:6}}>
+<div style={{marginBottom:4}}>
 <b>EP Profile</b>
+<div>
 <a href={playerData.epLink} target="_blank">
 {playerData.epLink}
 </a>
 </div>
+</div>
 
-<div style={{marginBottom:6}}>
+<div style={{marginBottom:4}}>
 <b>InStat</b>
+<div>
 <a href={playerData.instatLink} target="_blank">
 {playerData.instatLink}
 </a>
+</div>
 </div>
 
 </div>
@@ -221,7 +252,7 @@ Save Profile
 
 )}
 
-<button style={{marginTop:20}} onClick={onClose}>
+<button style={{marginTop:15}} onClick={onClose}>
 Back
 </button>
 
@@ -245,7 +276,8 @@ style={{
 background:"#fff",
 border:"1px solid #ddd",
 padding:12,
-marginTop:8
+marginTop:8,
+position:"relative"
 }}>
 
 <b>{t.coach} — {t.date}</b>
@@ -254,11 +286,23 @@ marginTop:8
 
 <div>{t.notes || t.score}</div>
 
+<button
+onClick={()=>deleteTimelineItem(t)}
+style={{
+position:"absolute",
+top:5,
+right:8
+}}
+
+>
+
+Delete </button>
+
 </div>
 
 ))}
 
-{/* GAME REPORTS */}
+{/* GAME REPORT */}
 
 <h3 style={{color:GOLD,marginTop:30}}>Game Reports</h3>
 
@@ -345,6 +389,12 @@ onChange={e=>setNoteForm({...noteForm,notes:e.target.value})}
 <h3 style={{color:GOLD,marginTop:30}}>Contact Log</h3>
 
 <div style={{background:"#fff",padding:15}}>
+
+<input
+placeholder="Coach"
+value={contactForm.coach}
+onChange={e=>setContactForm({...contactForm,coach:e.target.value})}
+/>
 
 <select
 value={contactForm.type}
