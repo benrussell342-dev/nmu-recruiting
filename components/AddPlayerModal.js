@@ -4,43 +4,26 @@ import { useState } from "react";
 import { db } from "../lib/firebase";
 import { collection, addDoc } from "firebase/firestore";
 
-const GREEN = "#00563F";
-const GOLD = "#CFB53B";
+export default function AddPlayerModal({ onClose }) {
 
-export default function AddPlayerModal({ onClose }){
+const [name,setName] = useState("");
+const [team,setTeam] = useState("");
+const [league,setLeague] = useState("");
+const [position,setPosition] = useState("C");
 
-const [form,setForm] = useState({
-name:"",
-team:"",
-league:"",
-position:"C",
-height:"",
-weight:"",
-hand:"",
-agent:"",
-epLink:"",
-instatLink:""
-});
+async function addPlayer(){
 
-async function submit(){
-
-if(!form.name){
+if(!name){
 alert("Player must have a name");
 return;
 }
 
 await addDoc(collection(db,"players"),{
 
-name:form.name,
-team:form.team,
-league:form.league,
-position:form.position,
-height:form.height,
-weight:form.weight,
-hand:form.hand,
-agent:form.agent,
-epLink:form.epLink,
-instatLink:form.instatLink,
+name,
+team,
+league,
+position,
 
 status:"Tracking",
 
@@ -65,7 +48,7 @@ top:0,
 left:0,
 width:"100%",
 height:"100%",
-background:"rgba(0,0,0,0.6)",
+background:"rgba(0,0,0,0.5)",
 display:"flex",
 justifyContent:"center",
 alignItems:"center"
@@ -74,33 +57,28 @@ alignItems:"center"
 <div style={{
 background:"#fff",
 padding:30,
-width:500,
-borderRadius:10
+width:400,
+borderRadius:8
 }}>
 
-<h2 style={{color:GREEN}}>
-Add Player
-</h2>
+<h2>Add Player</h2>
 
 <input
 placeholder="Name"
-onChange={e=>setForm({...form,name:e.target.value})}
+onChange={(e)=>setName(e.target.value)}
 />
 
 <input
 placeholder="Team"
-onChange={e=>setForm({...form,team:e.target.value})}
+onChange={(e)=>setTeam(e.target.value)}
 />
 
 <input
 placeholder="League"
-onChange={e=>setForm({...form,league:e.target.value})}
+onChange={(e)=>setLeague(e.target.value)}
 />
 
-<select
-onChange={e=>setForm({...form,position:e.target.value})}
-
->
+<select onChange={(e)=>setPosition(e.target.value)}>
 
 <option>C</option>
 <option>LW</option>
@@ -111,39 +89,9 @@ onChange={e=>setForm({...form,position:e.target.value})}
 
 </select>
 
-<input
-placeholder="Height"
-onChange={e=>setForm({...form,height:e.target.value})}
-/>
-
-<input
-placeholder="Weight"
-onChange={e=>setForm({...form,weight:e.target.value})}
-/>
-
-<input
-placeholder="Hand"
-onChange={e=>setForm({...form,hand:e.target.value})}
-/>
-
-<input
-placeholder="Agent"
-onChange={e=>setForm({...form,agent:e.target.value})}
-/>
-
-<input
-placeholder="EliteProspects Link"
-onChange={e=>setForm({...form,epLink:e.target.value})}
-/>
-
-<input
-placeholder="InStat Link"
-onChange={e=>setForm({...form,instatLink:e.target.value})}
-/>
-
 <div style={{marginTop:20}}>
 
-<button onClick={submit}>
+<button onClick={addPlayer}>
 Add Player
 </button>
 
