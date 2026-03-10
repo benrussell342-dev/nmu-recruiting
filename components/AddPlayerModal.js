@@ -12,17 +12,25 @@ const [form,setForm]=useState({
 name:"",
 team:"",
 league:"",
-position:"C"
+position:"C",
+height:"",
+weight:"",
+hand:"",
+agent:"",
+epLink:"",
+instatLink:""
 });
 
 async function submit(){
 
+if(!form.name){
+alert("Player must have a name");
+return;
+}
+
 await addDoc(collection(db,"players"),{
 
-name:form.name,
-team:form.team,
-league:form.league,
-position:form.position,
+...form,
 
 status:"Tracking",
 
@@ -56,43 +64,23 @@ alignItems:"center"
 <div style={{
 background:"#fff",
 padding:30,
-width:400,
+width:450,
 borderRadius:10
 }}>
 
-<h2 style={{color:GREEN}}>
-Add Player
-</h2>
+<h2 style={{color:GREEN}}>Add Player</h2>
 
-<input
+<input placeholder="Name"
+onChange={e=>setForm({...form,name:e.target.value})}/>
 
-placeholder="Name"
+<input placeholder="Team"
+onChange={e=>setForm({...form,team:e.target.value})}/>
 
-onChange={e=>setForm({...form,name:e.target.value})}
-
-/>
-
-<input
-
-placeholder="Team"
-
-onChange={e=>setForm({...form,team:e.target.value})}
-
-/>
-
-<input
-
-placeholder="League"
-
-onChange={e=>setForm({...form,league:e.target.value})}
-
-/>
+<input placeholder="League"
+onChange={e=>setForm({...form,league:e.target.value})}/>
 
 <select
-
-onChange={e=>setForm({...form,position:e.target.value})}
-
->
+onChange={e=>setForm({...form,position:e.target.value})}>
 
 <option>C</option>
 <option>LW</option>
@@ -103,15 +91,29 @@ onChange={e=>setForm({...form,position:e.target.value})}
 
 </select>
 
+<input placeholder="Height"
+onChange={e=>setForm({...form,height:e.target.value})}/>
+
+<input placeholder="Weight"
+onChange={e=>setForm({...form,weight:e.target.value})}/>
+
+<input placeholder="Hand"
+onChange={e=>setForm({...form,hand:e.target.value})}/>
+
+<input placeholder="Agent"
+onChange={e=>setForm({...form,agent:e.target.value})}/>
+
+<input placeholder="EliteProspects Link"
+onChange={e=>setForm({...form,epLink:e.target.value})}/>
+
+<input placeholder="InStat Link"
+onChange={e=>setForm({...form,instatLink:e.target.value})}/>
+
 <div style={{marginTop:20}}>
 
-<button onClick={submit}>
-Add Player
-</button>
+<button onClick={submit}>Add Player</button>
 
-<button onClick={onClose}>
-Cancel
-</button>
+<button onClick={onClose}>Cancel</button>
 
 </div>
 
