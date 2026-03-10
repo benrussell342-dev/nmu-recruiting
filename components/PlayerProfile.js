@@ -41,22 +41,17 @@ notes:""
 });
 
 async function saveProfile(){
-
 await updateDoc(doc(db,"players",player.id),playerData);
 setEdit(false);
-
 }
 
 async function saveSections(){
-
 await updateDoc(doc(db,"players",player.id),{
 reports,
 notes,
 contacts
 });
-
 alert("Saved");
-
 }
 
 async function deleteTimelineItem(item){
@@ -65,17 +60,17 @@ let newReports = reports;
 let newNotes = notes;
 let newContacts = contacts;
 
-if(item.type === "Game Report"){
+if(item.type==="Game Report"){
 newReports = reports.filter(r => r !== item);
 setReports(newReports);
 }
 
-if(item.type === "Scout Note"){
+if(item.type==="Scout Note"){
 newNotes = notes.filter(n => n !== item);
 setNotes(newNotes);
 }
 
-if(item.type === "Contact Log"){
+if(item.type==="Contact Log"){
 newContacts = contacts.filter(c => c !== item);
 setContacts(newContacts);
 }
@@ -134,6 +129,15 @@ type:"Call",
 date:"",
 notes:""
 });
+
+}
+
+function getIcon(type){
+
+if(type==="Game Report") return "📊";
+if(type==="Scout Note") return "📝";
+if(type==="Contact Log") return "📞";
+return "";
 
 }
 
@@ -295,7 +299,9 @@ position:"relative"
 
 <b>{t.coach} — {t.date}</b>
 
-<div><b>{t.type}</b></div>
+<div>
+<b>{getIcon(t.type)} {t.type}</b>
+</div>
 
 <div>{t.notes || t.score}</div>
 
@@ -310,9 +316,10 @@ top:5,
 right:8,
 cursor:"pointer"
 }}
+
 >
-Delete
-</button>
+
+Delete </button>
 
 </div>
 
@@ -457,4 +464,3 @@ Save Updates
 );
 
 }
-
