@@ -13,6 +13,7 @@ name:"",
 team:"",
 league:"",
 position:"C",
+birthYear:"",
 height:"",
 weight:"",
 hand:"",
@@ -23,19 +24,13 @@ instatLink:""
 
 async function submit(){
 
-if(!form.name){
-alert("Player must have a name");
-return;
-}
-
 await addDoc(collection(db,"players"),{
 
 ...form,
 
 status:"Tracking",
-
-matriculation:"",
-scholarship:0,
+archived:false,
+highlight:false,
 
 reports:[],
 notes:[],
@@ -79,8 +74,7 @@ onChange={e=>setForm({...form,team:e.target.value})}/>
 <input placeholder="League"
 onChange={e=>setForm({...form,league:e.target.value})}/>
 
-<select
-onChange={e=>setForm({...form,position:e.target.value})}>
+<select onChange={e=>setForm({...form,position:e.target.value})}>
 
 <option>C</option>
 <option>LW</option>
@@ -90,6 +84,9 @@ onChange={e=>setForm({...form,position:e.target.value})}>
 <option>G</option>
 
 </select>
+
+<input placeholder="Birth Year"
+onChange={e=>setForm({...form,birthYear:e.target.value})}/>
 
 <input placeholder="Height"
 onChange={e=>setForm({...form,height:e.target.value})}/>
@@ -103,19 +100,15 @@ onChange={e=>setForm({...form,hand:e.target.value})}/>
 <input placeholder="Agent"
 onChange={e=>setForm({...form,agent:e.target.value})}/>
 
-<input placeholder="EliteProspects Link"
+<input placeholder="EP Link"
 onChange={e=>setForm({...form,epLink:e.target.value})}/>
 
 <input placeholder="InStat Link"
 onChange={e=>setForm({...form,instatLink:e.target.value})}/>
 
-<div style={{marginTop:20}}>
-
 <button onClick={submit}>Add Player</button>
 
 <button onClick={onClose}>Cancel</button>
-
-</div>
 
 </div>
 
