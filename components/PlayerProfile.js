@@ -4,10 +4,10 @@ import { useState } from "react";
 import { db } from "../lib/firebase";
 import { updateDoc, doc } from "firebase/firestore";
 
-const GREEN="#00563F";
-const GOLD="#CFB53B";
+const GREEN = "#00563F";
+const GOLD = "#CFB53B";
 
-export default function PlayerProfile({player,onClose}){
+export default function PlayerProfile({ player, onClose }) {
 
 const [reports,setReports]=useState(player.reports||[]);
 const [notes,setNotes]=useState(player.notes||[]);
@@ -40,7 +40,7 @@ type:"Call",
 notes:""
 });
 
-async function save(){
+async function saveSections(){
 
 await updateDoc(doc(db,"players",player.id),{
 reports,
@@ -52,10 +52,19 @@ alert("Saved");
 
 }
 
+async function updateField(field,value){
+
+await updateDoc(doc(db,"players",player.id),{
+[field]:value
+});
+
+}
+
 function addReport(){
 
 setReports([...reports,{
-...reportForm
+...reportForm,
+type:"Game Report"
 }]);
 
 setReportForm({
@@ -72,7 +81,8 @@ notes:""
 function addNote(){
 
 setNotes([...notes,{
-...noteForm
+...noteForm,
+type:"Scout Note"
 }]);
 
 setNoteForm({
@@ -86,7 +96,8 @@ notes:""
 function addContact(){
 
 setContacts([...contacts,{
-...contactForm
+...contactForm,
+type:"Contact Log"
 }]);
 
 setContactForm({
@@ -100,9 +111,9 @@ notes:""
 
 const timeline=[
 
-...reports.map(r=>({...r,type:"Game Report"})),
-...notes.map(n=>({...n,type:"Scout Note"})),
-...contacts.map(c=>({...c,type:"Contact Log"}))
+...reports,
+...notes,
+...contacts
 
 ].sort((a,b)=>new Date(b.date)-new Date(a.date));
 
@@ -145,21 +156,67 @@ padding:40
 
 <h2 style={{color:GREEN}}>{player.name}</h2>
 
-<div style={{marginTop:20,lineHeight:1.8}}>
+<div style={{marginTop:20,lineHeight:2}}>
 
-<p><b>Team:</b> {player.team}</p>
-<p><b>League:</b> {player.league}</p>
-<p><b>Position:</b> {player.position}</p>
-<p><b>Height:</b> {player.height}</p>
-<p><b>Weight:</b> {player.weight}</p>
-<p><b>Hand:</b> {player.hand}</p>
-<p><b>Agent:</b> {player.agent}</p>
+<label>Team</label>
+<input
+value={player.team||""}
+onChange={e=>updateField("team",e.target.value)}
+/>
 
-<p><b>EP Link:</b> 
-<a href={player.epLink} target="_blank"> View Profile</a></p>
+<label>League</label>
+<input
+value={player.league||""}
+onChange={e=>updateField("league",e.target.value)}
+/>
 
-<p><b>InStat:</b> 
-<a href={player.instatLink} target="_blank"> View Video</a></p>
+<label>Position</label>
+<input
+value={player.position||""}
+onChange={e=>updateField("position",e.target.value)}
+/>
+
+<label>BirthYear</label>
+<input
+value={player.birthYear||""}
+onChange={e=>updateField("birthYear",e.target.value)}
+/>
+
+<label>Height</label>
+<input
+value={player.height||""}
+onChange={e=>updateField("height",e.target.value)}
+/>
+
+<label>Weight</label>
+<input
+value={player.weight||""}
+onChange={e=>updateField("weight",e.target.value)}
+/>
+
+<label>Hand</label>
+<input
+value={player.hand||""}
+onChange={e=>updateField("hand",e.target.value)}
+/>
+
+<label>Agent</label>
+<input
+value={player.agent||""}
+onChange={e=>updateField("agent",e.target.value)}
+/>
+
+<label>EliteProspects Link</label>
+<input
+value={player.epLink||""}
+onChange={e=>updateField("epLink",e.target.value)}
+/>
+
+<label>InStat Link</label>
+<input
+value={player.instatLink||""}
+onChange={e=>updateField("instatLink",e.target.value)}
+/>
 
 </div>
 
@@ -253,7 +310,7 @@ onChange={e=>setReportForm({...reportForm,rating:e.target.value})}
 </select>
 
 <textarea
-placeholder="Game Notes"
+placeholder="Game Report Notes"
 value={reportForm.notes}
 onChange={e=>setReportForm({...reportForm,notes:e.target.value})}
 />
@@ -353,7 +410,7 @@ onChange={e=>setContactForm({...contactForm,notes:e.target.value})}
 
 <button
 style={{marginTop:40}}
-onClick={save}
+onClick={saveSections}
 >
 Save Changes
 </button>
