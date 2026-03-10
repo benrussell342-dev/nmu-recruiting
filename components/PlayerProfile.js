@@ -72,109 +72,85 @@ style={{cursor:"pointer"}}
 
 <div style={{marginTop:20,lineHeight:2}}>
 
-<label>Team</label>
-
-{edit
-?
-<input
-defaultValue={player.team}
-onBlur={e=>updateField("team",e.target.value)}
-/>
+<b>Team</b>
+{edit ?
+<input defaultValue={player.team}
+onBlur={e=>updateField("team",e.target.value)}/>
 :
 
 <p>{player.team}</p>
 }
 
-<label>League</label>
-
-{edit
-?
-<input
-defaultValue={player.league}
-onBlur={e=>updateField("league",e.target.value)}
-/>
+<b>League</b>
+{edit ?
+<input defaultValue={player.league}
+onBlur={e=>updateField("league",e.target.value)}/>
 :
 
 <p>{player.league}</p>
 }
 
-<label>Position</label>
-
-{edit
-?
-<input
-defaultValue={player.position}
-onBlur={e=>updateField("position",e.target.value)}
-/>
+<b>Position</b>
+{edit ?
+<input defaultValue={player.position}
+onBlur={e=>updateField("position",e.target.value)}/>
 :
 
 <p>{player.position}</p>
 }
 
-<label>BirthYear</label>
-
-{edit
-?
-<input
-defaultValue={player.birthYear}
-onBlur={e=>updateField("birthYear",e.target.value)}
-/>
+<b>BirthYear</b>
+{edit ?
+<input defaultValue={player.birthYear}
+onBlur={e=>updateField("birthYear",e.target.value)}/>
 :
 
 <p>{player.birthYear}</p>
 }
 
-<label>Height</label>
-
-{edit
-?
-<input
-defaultValue={player.height}
-onBlur={e=>updateField("height",e.target.value)}
-/>
+<b>Height</b>
+{edit ?
+<input defaultValue={player.height}
+onBlur={e=>updateField("height",e.target.value)}/>
 :
 
 <p>{player.height}</p>
 }
 
-<label>Weight</label>
-
-{edit
-?
-<input
-defaultValue={player.weight}
-onBlur={e=>updateField("weight",e.target.value)}
-/>
+<b>Weight</b>
+{edit ?
+<input defaultValue={player.weight}
+onBlur={e=>updateField("weight",e.target.value)}/>
 :
 
 <p>{player.weight}</p>
 }
 
-<label>Hand</label>
-
-{edit
-?
-<input
-defaultValue={player.hand}
-onBlur={e=>updateField("hand",e.target.value)}
-/>
+<b>Hand</b>
+{edit ?
+<input defaultValue={player.hand}
+onBlur={e=>updateField("hand",e.target.value)}/>
 :
 
 <p>{player.hand}</p>
 }
 
-<label>Agent</label>
-
-{edit
-?
-<input
-defaultValue={player.agent}
-onBlur={e=>updateField("agent",e.target.value)}
-/>
+<b>Agent</b>
+{edit ?
+<input defaultValue={player.agent}
+onBlur={e=>updateField("agent",e.target.value)}/>
 :
 
 <p>{player.agent}</p>
 }
+
+<b>EliteProspects</b>
+
+<p>{player.epLink}</p>
+
+<b>InStat</b>
+
+<p>{player.instatLink}</p>
 
 </div>
 
@@ -188,7 +164,19 @@ Back </button>
 
 </div>
 
-{/* RIGHT COLUMN remains unchanged (reports / notes / timeline etc.) */}
+{/* RIGHT COLUMN */}
+
+<div>
+
+<h3 style={{color:GOLD}}>Activity Timeline</h3>
+
+<h3 style={{color:GOLD,marginTop:30}}>Game Reports</h3>
+
+<h3 style={{color:GOLD,marginTop:30}}>Scout Notes</h3>
+
+<h3 style={{color:GOLD,marginTop:30}}>Contact Log</h3>
+
+</div>
 
 </div>
 
