@@ -2,7 +2,7 @@
 
 import { useEffect,useState } from "react";
 import { db } from "../lib/firebase";
-import { collection,onSnapshot,updateDoc,doc } from "firebase/firestore";
+import { collection,onSnapshot,updateDoc,doc,deleteDoc } from "firebase/firestore";
 
 import AddPlayerModal from "./AddPlayerModal";
 import PlayerProfile from "./PlayerProfile";
@@ -28,9 +28,9 @@ const [dragPlayer,setDragPlayer]=useState(null);
 
 useEffect(()=>{
 
-const unsub = onSnapshot(collection(db,"players"),(snapshot)=>{
+const unsub=onSnapshot(collection(db,"players"),(snapshot)=>{
 
-const list = snapshot.docs.map(doc=>({
+const list=snapshot.docs.map(doc=>({
 id:doc.id,
 ...doc.data()
 }));
@@ -51,6 +51,14 @@ status:newStatus
 
 }
 
+async function deletePlayer(id){
+
+if(!confirm("Delete player?")) return;
+
+await deleteDoc(doc(db,"players",id));
+
+}
+
 return(
 
 <div style={{
@@ -59,8 +67,6 @@ minHeight:"100vh",
 padding:30,
 fontFamily:"Arial"
 }}>
-
-{/* HEADER */}
 
 <div style={{
 display:"flex",
@@ -82,8 +88,6 @@ Add Player </button>
 
 </div>
 
-{/* BOARD */}
-
 <div style={{
 display:"grid",
 gridTemplateColumns:"repeat(6,1fr)",
@@ -96,7 +100,7 @@ gap:20
 
 onDragOver={e=>e.preventDefault()}
 
-onDrop={()=>movePlayer(dragPlayer.id,status)}
+onDrop={()=>movePlayer(dragPlayer?.id,status)}
 
 style={{
 background:"#ffffff",
@@ -124,12 +128,34 @@ border:"1px solid #ddd",
 padding:8,
 marginTop:8,
 borderRadius:6,
-cursor:"pointer"
+cursor:"pointer",
+position:"relative"
 }}>
 
 <b>{p.name}</b>
 
 <div>{p.position}</div>
+
+<div
+
+onClick={(e)=>{
+e.stopPropagation();
+deletePlayer(p.id);
+}}
+
+style={{
+position:"absolute",
+bottom:5,
+right:5,
+fontSize:18,
+cursor:"pointer"
+}}
+
+>
+
+🗑
+
+</div>
 
 </div>
 
