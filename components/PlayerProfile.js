@@ -11,13 +11,32 @@ export default function PlayerProfile({player,onClose}){
 
 const [edit,setEdit]=useState(false);
 
-async function updateField(field,value){
+const [playerData,setPlayerData]=useState({...player});
+
+const [reports,setReports]=useState(player.reports||[]);
+const [notes,setNotes]=useState(player.notes||[]);
+const [contacts,setContacts]=useState(player.contacts||[]);
+
+async function saveProfile(){
+
+await updateDoc(doc(db,"players",player.id),playerData);
+
+setEdit(false);
+
+}
+
+async function saveSections(){
 
 await updateDoc(doc(db,"players",player.id),{
-[field]:value
+reports,
+notes,
+contacts
 });
 
 }
+
+const timeline=[...reports,...notes,...contacts]
+.sort((a,b)=>new Date(b.date)-new Date(a.date));
 
 return(
 
@@ -58,10 +77,10 @@ padding:40
 
 <div style={{display:"flex",alignItems:"center",gap:10}}>
 
-<h2 style={{color:GREEN}}>{player.name}</h2>
+<h2 style={{color:GREEN}}>{playerData.name}</h2>
 
 <span
-onClick={()=>setEdit(!edit)}
+onClick={()=>setEdit(true)}
 style={{cursor:"pointer"}}
 
 >
@@ -72,95 +91,52 @@ style={{cursor:"pointer"}}
 
 <div style={{marginTop:20,lineHeight:2}}>
 
-<b>Team</b>
-{edit ?
-<input defaultValue={player.team}
-onBlur={e=>updateField("team",e.target.value)}/>
+{["team","league","position","birthYear","height","weight","hand","agent"].map(field=>(
+
+<div key={field}>
+
+<b>{field}</b>
+
+{edit
+?
+<input
+value={playerData[field]||""}
+onChange={e=>setPlayerData({...playerData,[field]:e.target.value})}
+/>
 :
 
-<p>{player.team}</p>
+<p>{playerData[field]}</p>
 }
-
-<b>League</b>
-{edit ?
-<input defaultValue={player.league}
-onBlur={e=>updateField("league",e.target.value)}/>
-:
-
-<p>{player.league}</p>
-}
-
-<b>Position</b>
-{edit ?
-<input defaultValue={player.position}
-onBlur={e=>updateField("position",e.target.value)}/>
-:
-
-<p>{player.position}</p>
-}
-
-<b>BirthYear</b>
-{edit ?
-<input defaultValue={player.birthYear}
-onBlur={e=>updateField("birthYear",e.target.value)}/>
-:
-
-<p>{player.birthYear}</p>
-}
-
-<b>Height</b>
-{edit ?
-<input defaultValue={player.height}
-onBlur={e=>updateField("height",e.target.value)}/>
-:
-
-<p>{player.height}</p>
-}
-
-<b>Weight</b>
-{edit ?
-<input defaultValue={player.weight}
-onBlur={e=>updateField("weight",e.target.value)}/>
-:
-
-<p>{player.weight}</p>
-}
-
-<b>Hand</b>
-{edit ?
-<input defaultValue={player.hand}
-onBlur={e=>updateField("hand",e.target.value)}/>
-:
-
-<p>{player.hand}</p>
-}
-
-<b>Agent</b>
-{edit ?
-<input defaultValue={player.agent}
-onBlur={e=>updateField("agent",e.target.value)}/>
-:
-
-<p>{player.agent}</p>
-}
-
-<b>EliteProspects</b>
-
-<p>{player.epLink}</p>
-
-<b>InStat</b>
-
-<p>{player.instatLink}</p>
 
 </div>
 
-<button
-style={{marginTop:30}}
-onClick={onClose}
+))}
 
->
+<b>EliteProspects</b>
 
-Back </button>
+<a href={playerData.epLink} target="_blank">
+{playerData.epLink}
+</a>
+
+<b>InStat</b>
+
+<a href={playerData.instatLink} target="_blank">
+{playerData.instatLink}
+</a>
+
+</div>
+
+{edit && (
+
+<button onClick={saveProfile}>
+Save Profile
+</button>
+
+)}
+
+<button style={{marginTop:20}} onClick={onClose}>
+Back
+</button>
 
 </div>
 
@@ -170,11 +146,48 @@ Back </button>
 
 <h3 style={{color:GOLD}}>Activity Timeline</h3>
 
+{timeline.map((t,i)=>(
+
+<div key={i}
+style={{
+background:"#fff",
+border:"1px solid #ddd",
+padding:12,
+marginTop:8
+}}>
+
+<b>{t.coach} — {t.date}</b>
+
+<div><b>{t.type}</b></div>
+
+<div>{t.notes}</div>
+
+</div>
+
+))}
+
 <h3 style={{color:GOLD,marginTop:30}}>Game Reports</h3>
+
+<button onClick={()=>setReports([...reports,{type:"Game Report"}])}>
+Add Report </button>
 
 <h3 style={{color:GOLD,marginTop:30}}>Scout Notes</h3>
 
+<button onClick={()=>setNotes([...notes,{type:"Scout Note"}])}>
+Add Note </button>
+
 <h3 style={{color:GOLD,marginTop:30}}>Contact Log</h3>
+
+<button onClick={()=>setContacts([...contacts,{type:"Contact Log"}])}>
+Add Contact </button>
+
+<button
+style={{marginTop:30}}
+onClick={saveSections}
+
+>
+
+Save Updates </button>
 
 </div>
 
