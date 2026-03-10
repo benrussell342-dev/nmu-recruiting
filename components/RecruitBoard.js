@@ -25,8 +25,6 @@ const [players,setPlayers]=useState([]);
 const [showAdd,setShowAdd]=useState(false);
 const [selected,setSelected]=useState(null);
 const [search,setSearch]=useState("");
-const [sort,setSort]=useState("birthYear");
-const [showArchive,setShowArchive]=useState(false);
 
 useEffect(()=>{
 
@@ -45,17 +43,11 @@ return ()=>unsub();
 
 },[]);
 
-async function movePlayer(id,newStatus){
+async function deletePlayer(id){
 
-await updateDoc(doc(db,"players",id),{status:newStatus});
+if(!confirm("Delete player?")) return;
 
-}
-
-async function toggleHighlight(p){
-
-await updateDoc(doc(db,"players",p.id),{
-highlight:!p.highlight
-});
+await deleteDoc(doc(db,"players",id));
 
 }
 
@@ -67,29 +59,13 @@ archived:true
 
 }
 
-async function restorePlayer(id){
+async function toggleHighlight(e,p){
 
-await updateDoc(doc(db,"players",id),{
-archived:false
+e.preventDefault();
+
+await updateDoc(doc(db,"players",p.id),{
+highlight:!p.highlight
 });
-
-}
-
-function sortPlayers(list){
-
-if(sort==="birthYear"){
-
-return list.sort((a,b)=>a.birthYear-b.birthYear);
-
-}
-
-if(sort==="position"){
-
-return list.sort((a,b)=>a.position.localeCompare(b.position));
-
-}
-
-return list;
 
 }
 
@@ -102,75 +78,118 @@ return(
 <div style={{
 background:GREEN,
 minHeight:"100vh",
-padding:30
+padding:30,
+fontFamily:"Arial"
 }}>
 
-<div style={{display:"flex",gap:20}}>
+<div style={{
+display:"flex",
+justifyContent:"space-between",
+alignItems:"center",
+marginBottom:30
+}}>
+
+<div style={{display:"flex",alignItems:"center",gap:15}}>
+<img src="/wildcat.png" style={{height:50}}/>
+
+<h1 style={{color:GOLD}}>
+NMU Hockey Recruiting Board
+</h1>
+</div>
+
+<div style={{display:"flex",gap:15}}>
 
 <input
 placeholder="Search player"
 onChange={e=>setSearch(e.target.value)}
 />
 
-<select onChange={e=>setSort(e.target.value)}>
-
-<option value="birthYear">Sort by BirthYear</option>
-<option value="position">Sort by Position</option>
-</select>
-
-<button onClick={()=>setShowArchive(!showArchive)}>
-Archive </button>
-
 <button onClick={()=>setShowAdd(true)}>
 Add Player </button>
+
+</div>
 
 </div>
 
 <div style={{
 display:"grid",
 gridTemplateColumns:"repeat(6,1fr)",
-gap:20,
-marginTop:30
+gap:20
 }}>
 
 {LISTS.map(status=>(
 
-<div key={status} style={{background:"#fff",padding:10}}>
+<div key={status}
+style={{
+background:"#ffffff",
+borderRadius:8,
+padding:10,
+minHeight:350
+}}>
 
-<h3>{status}</h3>
+<h3 style={{borderBottom:`2px solid ${GOLD}`}}>
+{status}
+</h3>
 
-{sortPlayers(
-filtered.filter(p=>p.status===status && !p.archived)
-).map(p=>(
+{filtered
+.filter(p=>p.status===status && !p.archived)
+.map(p=>(
 
 <div key={p.id}
 
 onClick={()=>setSelected(p)}
 
-onDoubleClick={()=>toggleHighlight(p)}
+onContextMenu={(e)=>toggleHighlight(e,p)}
 
 style={{
 border:"1px solid #ddd",
-padding:8,
+padding:10,
 marginTop:8,
-background:p.highlight?"yellow":"white"
+borderRadius:6,
+cursor:"pointer",
+background:p.highlight?"#FFF176":"#fff",
+position:"relative"
 }}
 
 >
 
 <b>{p.name}</b>
 
-<div>{p.position} • {p.birthYear}</div>
+<div style={{fontSize:13}}>
+{p.position} • {p.birthYear}
+</div>
 
-<button
+<div style={{
+position:"absolute",
+bottom:5,
+right:8,
+display:"flex",
+gap:8
+}}>
+
+<span
 onClick={(e)=>{
 e.stopPropagation();
 archivePlayer(p.id);
 }}
+style={{cursor:"pointer"}}
 
 >
 
-Archive </button>
+📦 </span>
+
+<span
+onClick={(e)=>{
+e.stopPropagation();
+deletePlayer(p.id);
+}}
+style={{cursor:"pointer"}}
+
+>
+
+🗑 </span>
+
+</div>
 
 </div>
 
@@ -181,29 +200,6 @@ Archive </button>
 ))}
 
 </div>
-
-{showArchive && (
-
-<div style={{marginTop:40,background:"#fff",padding:20}}>
-
-<h2>Archived Players</h2>
-
-{players.filter(p=>p.archived).map(p=>(
-
-<div key={p.id}>
-
-{p.name}
-
-<button onClick={()=>restorePlayer(p.id)}>
-Restore </button>
-
-</div>
-
-))}
-
-</div>
-
-)}
 
 {showAdd && <AddPlayerModal onClose={()=>setShowAdd(false)} />}
 
