@@ -10,17 +10,38 @@ const GOLD="#CFB53B";
 export default function PlayerProfile({player,onClose}){
 
 const [edit,setEdit]=useState(false);
-
 const [playerData,setPlayerData]=useState({...player});
 
 const [reports,setReports]=useState(player.reports||[]);
 const [notes,setNotes]=useState(player.notes||[]);
 const [contacts,setContacts]=useState(player.contacts||[]);
 
+const [showTimeline,setShowTimeline]=useState(true);
+
+const [reportForm,setReportForm]=useState({
+coach:"",
+date:"",
+opponent:"",
+score:"",
+rating:3,
+notes:""
+});
+
+const [noteForm,setNoteForm]=useState({
+coach:"",
+date:"",
+notes:""
+});
+
+const [contactForm,setContactForm]=useState({
+type:"Call",
+date:"",
+notes:""
+});
+
 async function saveProfile(){
 
 await updateDoc(doc(db,"players",player.id),playerData);
-
 setEdit(false);
 
 }
@@ -33,10 +54,65 @@ notes,
 contacts
 });
 
+alert("Saved");
+
 }
 
-const timeline=[...reports,...notes,...contacts]
-.sort((a,b)=>new Date(b.date)-new Date(a.date));
+function addReport(){
+
+setReports([...reports,{
+type:"Game Report",
+...reportForm
+}]);
+
+setReportForm({
+coach:"",
+date:"",
+opponent:"",
+score:"",
+rating:3,
+notes:""
+});
+
+}
+
+function addNote(){
+
+setNotes([...notes,{
+type:"Scout Note",
+...noteForm
+}]);
+
+setNoteForm({
+coach:"",
+date:"",
+notes:""
+});
+
+}
+
+function addContact(){
+
+setContacts([...contacts,{
+type:"Contact Log",
+...contactForm
+}]);
+
+setContactForm({
+type:"Call",
+date:"",
+notes:""
+});
+
+}
+
+const timeline=[
+
+...reports,
+...notes,
+...contacts
+
+].sort((a,b)=>new Date(b.date)-new Date(a.date));
 
 return(
 
@@ -89,40 +165,51 @@ style={{cursor:"pointer"}}
 
 </div>
 
-<div style={{marginTop:20,lineHeight:2}}>
+<div style={{marginTop:15,lineHeight:1.5}}>
 
-{["team","league","position","birthYear","height","weight","hand","agent"].map(field=>(
+{[
+["Team","team"],
+["League","league"],
+["Position","position"],
+["Birthyear","birthYear"],
+["Height","height"],
+["Weight","weight"],
+["Hand","hand"],
+["Agent","agent"]
+].map(([label,key])=>(
 
-<div key={field}>
+<div key={key} style={{marginBottom:6}}>
 
-<b>{field}</b>
+<b>{label}</b>
 
 {edit
 ?
 <input
-value={playerData[field]||""}
-onChange={e=>setPlayerData({...playerData,[field]:e.target.value})}
+value={playerData[key]||""}
+onChange={e=>setPlayerData({...playerData,[key]:e.target.value})}
 />
 :
 
-<p>{playerData[field]}</p>
+<p>{playerData[key]}</p>
 }
 
 </div>
 
 ))}
 
-<b>EliteProspects</b>
-
+<div style={{marginBottom:6}}>
+<b>EP Profile</b>
 <a href={playerData.epLink} target="_blank">
 {playerData.epLink}
 </a>
+</div>
 
+<div style={{marginBottom:6}}>
 <b>InStat</b>
-
 <a href={playerData.instatLink} target="_blank">
 {playerData.instatLink}
 </a>
+</div>
 
 </div>
 
@@ -144,9 +231,14 @@ Back
 
 <div>
 
-<h3 style={{color:GOLD}}>Activity Timeline</h3>
+<h3
+style={{color:GOLD,cursor:"pointer"}}
+onClick={()=>setShowTimeline(!showTimeline)}
+>
+Activity Timeline
+</h3>
 
-{timeline.map((t,i)=>(
+{showTimeline && timeline.map((t,i)=>(
 
 <div key={i}
 style={{
@@ -160,34 +252,135 @@ marginTop:8
 
 <div><b>{t.type}</b></div>
 
-<div>{t.notes}</div>
+<div>{t.notes || t.score}</div>
 
 </div>
 
 ))}
 
+{/* GAME REPORTS */}
+
 <h3 style={{color:GOLD,marginTop:30}}>Game Reports</h3>
 
-<button onClick={()=>setReports([...reports,{type:"Game Report"}])}>
-Add Report </button>
+<div style={{background:"#fff",padding:15}}>
+
+<input
+placeholder="Coach"
+value={reportForm.coach}
+onChange={e=>setReportForm({...reportForm,coach:e.target.value})}
+/>
+
+<input
+type="date"
+value={reportForm.date}
+onChange={e=>setReportForm({...reportForm,date:e.target.value})}
+/>
+
+<input
+placeholder="Opponent"
+value={reportForm.opponent}
+onChange={e=>setReportForm({...reportForm,opponent:e.target.value})}
+/>
+
+<input
+placeholder="Final Score"
+value={reportForm.score}
+onChange={e=>setReportForm({...reportForm,score:e.target.value})}
+/>
+
+<select
+value={reportForm.rating}
+onChange={e=>setReportForm({...reportForm,rating:e.target.value})}
+
+>
+
+<option value="1">★☆☆☆☆</option>
+<option value="2">★★☆☆☆</option>
+<option value="3">★★★☆☆</option>
+<option value="4">★★★★☆</option>
+<option value="5">★★★★★</option>
+
+</select>
+
+<textarea
+placeholder="Report Notes"
+value={reportForm.notes}
+onChange={e=>setReportForm({...reportForm,notes:e.target.value})}
+/>
+
+<button onClick={addReport}>Add Report</button>
+
+</div>
+
+{/* SCOUT NOTES */}
 
 <h3 style={{color:GOLD,marginTop:30}}>Scout Notes</h3>
 
-<button onClick={()=>setNotes([...notes,{type:"Scout Note"}])}>
-Add Note </button>
+<div style={{background:"#fff",padding:15}}>
+
+<input
+placeholder="Coach"
+value={noteForm.coach}
+onChange={e=>setNoteForm({...noteForm,coach:e.target.value})}
+/>
+
+<input
+type="date"
+value={noteForm.date}
+onChange={e=>setNoteForm({...noteForm,date:e.target.value})}
+/>
+
+<textarea
+placeholder="Notes"
+value={noteForm.notes}
+onChange={e=>setNoteForm({...noteForm,notes:e.target.value})}
+/>
+
+<button onClick={addNote}>Add Note</button>
+
+</div>
+
+{/* CONTACT LOG */}
 
 <h3 style={{color:GOLD,marginTop:30}}>Contact Log</h3>
 
-<button onClick={()=>setContacts([...contacts,{type:"Contact Log"}])}>
-Add Contact </button>
+<div style={{background:"#fff",padding:15}}>
+
+<select
+value={contactForm.type}
+onChange={e=>setContactForm({...contactForm,type:e.target.value})}
+>
+
+<option>Call</option>
+<option>Text</option>
+<option>Email</option>
+<option>Zoom</option>
+<option>Visit</option>
+
+</select>
+
+<input
+type="date"
+value={contactForm.date}
+onChange={e=>setContactForm({...contactForm,date:e.target.value})}
+/>
+
+<textarea
+placeholder="Notes"
+value={contactForm.notes}
+onChange={e=>setContactForm({...contactForm,notes:e.target.value})}
+/>
+
+<button onClick={addContact}>Add Contact</button>
+
+</div>
 
 <button
 style={{marginTop:30}}
 onClick={saveSections}
-
 >
-
-Save Updates </button>
+Save Updates
+</button>
 
 </div>
 
