@@ -24,6 +24,7 @@ export default function RecruitBoard(){
 const [players,setPlayers]=useState([]);
 const [showAdd,setShowAdd]=useState(false);
 const [selected,setSelected]=useState(null);
+const [dragPlayer,setDragPlayer]=useState(null);
 const [search,setSearch]=useState("");
 const [showArchive,setShowArchive]=useState(false);
 const [sort,setSort]=useState("");
@@ -44,6 +45,14 @@ setPlayers(list);
 return ()=>unsub();
 
 },[]);
+
+async function movePlayer(id,newStatus){
+
+await updateDoc(doc(db,"players",id),{
+status:newStatus
+});
+
+}
 
 async function deletePlayer(id){
 
@@ -115,10 +124,7 @@ marginBottom:30
 
 <div style={{display:"flex",alignItems:"center",gap:15}}>
 <img src="/wildcat.png" style={{height:50}}/>
-
-<h1 style={{color:GOLD}}>
-NMU Hockey Recruiting Board
-</h1>
+<h1 style={{color:GOLD}}>NMU Hockey Recruiting Board</h1>
 </div>
 
 <div style={{display:"flex",gap:15}}>
@@ -133,7 +139,6 @@ onChange={e=>setSearch(e.target.value)}
 <option value="">Sort</option>
 <option value="birthYear">BirthYear</option>
 <option value="position">Position</option>
-
 </select>
 
 <button onClick={()=>setShowArchive(!showArchive)}>
@@ -149,7 +154,6 @@ Add Player </button>
 {showArchive && (
 
 <div style={{background:"#fff",padding:20,marginBottom:30}}>
-
 <h2>Archived Players</h2>
 
 {players.filter(p=>p.archived).map(p=>(
@@ -178,8 +182,13 @@ gap:20
 {LISTS.map(status=>(
 
 <div key={status}
+
+onDragOver={(e)=>e.preventDefault()}
+
+onDrop={()=>movePlayer(dragPlayer?.id,status)}
+
 style={{
-background:"#ffffff",
+background:"#fff",
 borderRadius:8,
 padding:10,
 minHeight:350
@@ -194,6 +203,10 @@ filtered.filter(p=>p.status===status && !p.archived)
 ).map(p=>(
 
 <div key={p.id}
+
+draggable
+
+onDragStart={()=>setDragPlayer(p)}
 
 onClick={()=>setSelected(p)}
 
