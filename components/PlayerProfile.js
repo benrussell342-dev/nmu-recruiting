@@ -55,9 +55,11 @@ alert("Saved");
 }
 
 function icon(type){
+
 if(type==="Game Report") return "📊";
 if(type==="Scout Note") return "📝";
 if(type==="Contact Log") return "📞";
+
 return "";
 }
 
@@ -93,7 +95,7 @@ contacts:newContacts
 function addReport(){
 
 const newItem={
-id:Date.now(),
+id:crypto.randomUUID(),
 type:"Game Report",
 ...reportForm
 };
@@ -114,7 +116,7 @@ notes:""
 function addNote(){
 
 const newItem={
-id:Date.now(),
+id:crypto.randomUUID(),
 type:"Scout Note",
 ...noteForm
 };
@@ -132,7 +134,7 @@ notes:""
 function addContact(){
 
 const newItem={
-id:Date.now(),
+id:crypto.randomUUID(),
 type:"Contact Log",
 ...contactForm
 };
@@ -148,8 +150,27 @@ notes:""
 
 }
 
+/* timeline merge */
+
 const timeline=[...reports,...notes,...contacts]
+.filter(item=>item.date)
 .sort((a,b)=>new Date(b.date)-new Date(a.date));
+
+/* group by month */
+
+const grouped={};
+
+timeline.forEach(item=>{
+
+const d=new Date(item.date);
+
+const key=d.toLocaleString("default",{month:"long",year:"numeric"});
+
+if(!grouped[key]) grouped[key]=[];
+
+grouped[key].push(item);
+
+});
 
 return(
 
@@ -277,16 +298,24 @@ onClick={()=>setShowTimeline(!showTimeline)}
 Activity Timeline
 </h3>
 
-{showTimeline && timeline.map((t,i)=>(
+{showTimeline && Object.keys(grouped).map(month=>(
 
-<div key={t.id || i}
+<div key={month}>
+
+<h4 style={{marginTop:20,color:GREEN}}>{month}</h4>
+
+{grouped[month].map((t)=>(
+
+<div
+key={t.id}
 style={{
 background:"#fff",
 border:"1px solid #ddd",
 padding:12,
 marginTop:8,
 position:"relative"
-}}>
+}}
+>
 
 <b>{t.coach} — {t.date}</b>
 
@@ -315,6 +344,9 @@ fontWeight:"bold"
 >
 
 ✕ </button>
+
+</div>
+))}
 
 </div>
 
@@ -385,7 +417,8 @@ value={noteForm.date}
 onChange={e=>setNoteForm({...noteForm,date:e.target.value})}
 />
 
-<textarea placeholder="Notes"
+<textarea
+placeholder="Notes"
 value={noteForm.notes}
 onChange={e=>setNoteForm({...noteForm,notes:e.target.value})}
 />
@@ -421,7 +454,8 @@ value={contactForm.date}
 onChange={e=>setContactForm({...contactForm,date:e.target.value})}
 />
 
-<textarea placeholder="Notes"
+<textarea
+placeholder="Notes"
 value={contactForm.notes}
 onChange={e=>setContactForm({...contactForm,notes:e.target.value})}
 />
