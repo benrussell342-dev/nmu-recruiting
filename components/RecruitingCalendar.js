@@ -21,13 +21,19 @@ const MONTHS=[
 "July","August","September","October","November","December"
 ];
 
+const WEEKDAYS=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+
 export default function RecruitingCalendar({onClose}){
 
-const [month,setMonth]=useState(new Date().getMonth());
-const [year,setYear]=useState(new Date().getFullYear());
+const today=new Date();
+
+const [month,setMonth]=useState(today.getMonth());
+const [year,setYear]=useState(today.getFullYear());
 
 const [trips,setTrips]=useState({});
 const [selected,setSelected]=useState(null);
+
+/* load calendar */
 
 useEffect(()=>{
 
@@ -46,6 +52,8 @@ load();
 
 },[]);
 
+/* save */
+
 async function save(updated){
 
 setTrips(updated);
@@ -56,11 +64,19 @@ trips:updated
 
 }
 
+/* helper to format YYYY-MM-DD */
+
+function formatDate(d){
+
+return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+
+}
+
 /* add trip */
 
 function addTrip(day){
 
-const startDate=`${year}-${month}-${day}`;
+const date=new Date(year,month,day);
 
 const id=Date.now().toString();
 
@@ -68,8 +84,8 @@ const updated={...trips};
 
 updated[id]={
 coach:"",
-start:startDate,
-end:startDate,
+start:formatDate(date),
+end:formatDate(date),
 games:[]
 };
 
@@ -100,9 +116,9 @@ function addGame(){
 const updated={...trips};
 
 updated[selected].games.push({
-date:"",
 team1:"",
 team2:"",
+date:"",
 time:"",
 location:""
 });
@@ -111,9 +127,11 @@ save(updated);
 
 }
 
+/* days in month */
+
 const daysInMonth=new Date(year,month+1,0).getDate();
 
-/* check if trip spans day */
+/* check trips for each day */
 
 function tripsForDay(day){
 
@@ -139,6 +157,8 @@ padding:30,
 fontFamily:"Arial"
 }}>
 
+{/* header */}
+
 <div style={{
 display:"flex",
 justifyContent:"space-between",
@@ -150,6 +170,8 @@ alignItems:"center"
 <button onClick={onClose}>Back</button>
 
 </div>
+
+{/* month selector */}
 
 <div style={{
 display:"flex",
@@ -176,13 +198,31 @@ style={{width:80}}
 
 </div>
 
+{/* weekday header */}
+
+<div style={{
+display:"grid",
+gridTemplateColumns:"repeat(7,1fr)",
+marginTop:20,
+color:"#fff",
+fontWeight:"bold"
+}}>
+
+{WEEKDAYS.map(d=>(
+<div key={d} style={{textAlign:"center"}}>
+{d}
+</div>
+))}
+
+</div>
+
 {/* calendar grid */}
 
 <div style={{
 display:"grid",
 gridTemplateColumns:"repeat(7,1fr)",
 gap:10,
-marginTop:30
+marginTop:10
 }}>
 
 {Array.from({length:daysInMonth}).map((_,i)=>{
@@ -193,33 +233,31 @@ const dayTrips=tripsForDay(day);
 
 return(
 
-<div key={day}
-
+<div
+key={day}
 style={{
 background:"#fff",
 minHeight:120,
 padding:8,
 borderRadius:6
 }}
-
 >
 
 <b>{day}</b>
 
 {dayTrips.map(([id,t])=>(
 
-<div key={id}
-
+<div
+key={id}
 onClick={()=>setSelected(id)}
-
 style={{
 marginTop:6,
 padding:4,
 background:COACHES[t.coach]||"#ccc",
 cursor:"pointer",
-borderRadius:4
+borderRadius:4,
+color:"#fff"
 }}
-
 >
 
 {t.coach || "Trip"}
@@ -230,11 +268,12 @@ borderRadius:4
 
 <button
 onClick={()=>addTrip(day)}
-style={{marginTop:5,fontSize:12}}
+style={{
+marginTop:6,
+fontSize:12
+}}
 >
-
 Add Trip
-
 </button>
 
 </div>
@@ -418,18 +457,14 @@ Add Game
 onClick={()=>deleteTrip(selected)}
 style={{marginLeft:10}}
 >
-
 Delete Trip
-
 </button>
 
 <button
 onClick={()=>setSelected(null)}
 style={{marginLeft:10}}
 >
-
 Close
-
 </button>
 
 </div>
