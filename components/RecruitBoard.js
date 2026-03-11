@@ -315,20 +315,6 @@ Last Contact: {daysSinceLastContact(p)} days
 
 </div>
 
-)}
-
-<div style={{fontSize:12,color:"#666"}}>
-Last Contact: {getLastContact(p)}
-</div>
-
-<div style={{
-position:"absolute",
-bottom:5,
-right:8,
-display:"flex",
-gap:8
-}}>
-
 <span
 onClick={(e)=>{
 e.stopPropagation();
@@ -376,6 +362,7 @@ style={{cursor:"pointer"}}
 );
 
 }
+
 
 
 
