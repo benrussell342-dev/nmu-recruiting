@@ -122,6 +122,40 @@ return list;
 
 }
 
+function sortPlayers(list){
+
+if(sort==="birthYear"){
+return [...list].sort((a,b)=>(a.birthYear||0)-(b.birthYear||0));
+}
+
+if(sort==="position"){
+return [...list].sort((a,b)=>(a.position||"").localeCompare(b.position||""));
+}
+
+return list;
+
+}
+
+/* ADD THIS FUNCTION RIGHT HERE */
+
+function daysSinceLastContact(player){
+
+if(!player.contacts || player.contacts.length===0) return null;
+
+const lastContact =
+player.contacts[player.contacts.length-1];
+
+const lastDate = new Date(lastContact.date);
+const today = new Date();
+
+const diff = Math.floor(
+(today-lastDate)/(1000*60*60*24)
+);
+
+return diff;
+
+}
+
 function getLastContact(player){
 
 if(!player.contacts || player.contacts.length===0) return "—";
@@ -269,6 +303,20 @@ position:"relative"
 {p.position} • {p.birthYear}
 </div>
 
+{daysSinceLastContact(p)!==null && (
+
+<div style={{
+fontSize:12,
+marginTop:4,
+color:"#555"
+}}>
+
+Last Contact: {daysSinceLastContact(p)} days
+
+</div>
+
+)}
+
 <div style={{fontSize:12,color:"#666"}}>
 Last Contact: {getLastContact(p)}
 </div>
@@ -328,6 +376,7 @@ style={{cursor:"pointer"}}
 );
 
 }
+
 
 
 
