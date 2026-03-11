@@ -246,12 +246,12 @@ flex:3
 
 <div style={{
 display:"grid",
-gridTemplateColumns:"repeat(6,1fr)",
+gridTemplateColumns:"1fr 1fr 1fr 40px 1fr 1fr 40px 1fr",
 gap:4
 }}>
 
-{POSITIONS.map(pos=>(
-
+{POSITIONS.map((pos,i)=>(
+<>
 <div key={pos}>
 
 <div style={{
@@ -322,6 +322,13 @@ style={{width:"100%"}}
 
 </div>
 
+{/* spacer after forwards */}
+{i===2 && <div></div>}
+
+{/* spacer after defense */}
+{i===4 && <div></div>}
+
+</>
 ))}
 
 </div>
