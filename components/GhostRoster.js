@@ -40,10 +40,8 @@ G:Array(4).fill().map(()=>({name:"",scholarship:"",color:"NEED"}))
 export default function GhostRoster({onClose}){
 
 const [season,setSeason]=useState(SEASONS[0]);
-
 const [rosters,setRosters]=useState({});
 const [money,setMoney]=useState([]);
-
 const [dragData,setDragData]=useState(null);
 
 useEffect(()=>{
@@ -56,9 +54,33 @@ const snap=await getDoc(ref);
 
 if(snap.exists()){
 
-const data=snap.data();
+let data=snap.data();
 
-setRosters(data.rosters);
+let updatedRosters=data.rosters||{};
+
+/* ensure all seasons + 4 goalie slots */
+
+SEASONS.forEach(s=>{
+
+if(!updatedRosters[s]) updatedRosters[s]=emptyRoster();
+
+if(updatedRosters[s].G.length<4){
+
+while(updatedRosters[s].G.length<4){
+
+updatedRosters[s].G.push({
+name:"",
+scholarship:"",
+color:"NEED"
+});
+
+}
+
+}
+
+});
+
+setRosters(updatedRosters);
 setMoney(data.money||[]);
 
 }else{
@@ -91,15 +113,7 @@ money:updatedMoney
 
 }
 
-let roster = rosters[season] || emptyRoster();
-
-/* ensure 4 goalie slots */
-
-if(roster.G && roster.G.length < 4){
-
-while(roster.G.length < 4){
-roster.G.push({name:"",scholarship:"",color:"NEED"});
-}
+const roster=rosters[season]||emptyRoster();
 
 function updateSlot(position,index,field,value){
 
@@ -362,6 +376,7 @@ onChange={e=>{
 
 const updated=[...money];
 updated[i].name=e.target.value;
+
 save(rosters,updated);
 
 }}
@@ -374,6 +389,7 @@ onChange={e=>{
 
 const updated=[...money];
 updated[i].amount=parseInt(e.target.value)||0;
+
 save(rosters,updated);
 
 }}
