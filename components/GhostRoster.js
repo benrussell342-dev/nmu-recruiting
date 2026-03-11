@@ -101,8 +101,6 @@ while(roster.G.length < 4){
 roster.G.push({name:"",scholarship:"",color:"NEED"});
 }
 
-}const roster=rosters[season]||emptyRoster();
-
 function updateSlot(position,index,field,value){
 
 const updated={...rosters};
