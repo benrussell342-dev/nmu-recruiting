@@ -6,6 +6,7 @@ import { collection,onSnapshot,updateDoc,doc,deleteDoc } from "firebase/firestor
 
 import AddPlayerModal from "./AddPlayerModal";
 import PlayerProfile from "./PlayerProfile";
+import GhostRoster from "./GhostRoster";
 
 const GREEN="#00563F";
 const GOLD="#CFB53B";
@@ -28,7 +29,8 @@ const [dragPlayer,setDragPlayer]=useState(null);
 const [search,setSearch]=useState("");
 const [showArchive,setShowArchive]=useState(false);
 const [sort,setSort]=useState("");
-
+const [showGhost,setShowGhost]=useState(false);
+       
 useEffect(()=>{
 
 const unsub=onSnapshot(collection(db,"players"),(snapshot)=>{
@@ -157,6 +159,10 @@ onChange={e=>setSearch(e.target.value)}
 <button onClick={()=>setShowArchive(!showArchive)}>
 Archive </button>
 
+<button onClick={()=>setShowGhost(true)}>
+Ghost Roster
+</button>
+       
 <button onClick={()=>setShowAdd(true)}>
 Add Player </button>
 
@@ -289,6 +295,8 @@ style={{cursor:"pointer"}}
 
 </div>
 
+{showGhost && <GhostRoster />}
+
 {showAdd && <AddPlayerModal onClose={()=>setShowAdd(false)} />}
 
 {selected && <PlayerProfile player={selected} onClose={()=>setSelected(null)} />}
@@ -298,5 +306,6 @@ style={{cursor:"pointer"}}
 );
 
 }
+
 
 
