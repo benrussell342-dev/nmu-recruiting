@@ -310,10 +310,18 @@ fontSize:12,
 marginTop:4,
 color:"#555"
 }}>
-
 Last Contact: {daysSinceLastContact(p)} days
-
 </div>
+
+)}
+
+<div style={{
+position:"absolute",
+bottom:5,
+right:8,
+display:"flex",
+gap:8
+}}>
 
 <span
 onClick={(e)=>{
@@ -321,10 +329,9 @@ e.stopPropagation();
 archivePlayer(p.id);
 }}
 style={{cursor:"pointer"}}
-
 >
-
-📦 </span>
+📦
+</span>
 
 <span
 onClick={(e)=>{
@@ -332,20 +339,9 @@ e.stopPropagation();
 deletePlayer(p.id);
 }}
 style={{cursor:"pointer"}}
-
 >
-
-🗑 </span>
-
-</div>
-
-</div>
-
-))}
-
-</div>
-
-))}
+🗑
+</span>
 
 </div>
 
@@ -362,6 +358,7 @@ style={{cursor:"pointer"}}
 );
 
 }
+
 
 
 
