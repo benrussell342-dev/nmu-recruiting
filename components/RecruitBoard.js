@@ -102,6 +102,17 @@ return list;
 
 }
 
+function getLastContact(player){
+
+if(!player.contacts || player.contacts.length===0) return "—";
+
+const latest = [...player.contacts]
+.sort((a,b)=>new Date(b.date)-new Date(a.date))[0];
+
+return latest.date;
+
+}
+
 const filtered=players.filter(p=>
 p.name?.toLowerCase().includes(search.toLowerCase())
 );
@@ -230,6 +241,10 @@ position:"relative"
 {p.position} • {p.birthYear}
 </div>
 
+<div style={{fontSize:12,color:"#666"}}>
+Last Contact: {getLastContact(player)}
+</div>
+
 <div style={{
 position:"absolute",
 bottom:5,
@@ -281,3 +296,4 @@ style={{cursor:"pointer"}}
 );
 
 }
+
