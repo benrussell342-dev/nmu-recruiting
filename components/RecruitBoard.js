@@ -30,7 +30,7 @@ const [search,setSearch]=useState("");
 const [showArchive,setShowArchive]=useState(false);
 const [sort,setSort]=useState("");
 const [showGhost,setShowGhost]=useState(false);
-       
+
 useEffect(()=>{
 
 const unsub=onSnapshot(collection(db,"players"),(snapshot)=>{
@@ -49,6 +49,8 @@ return ()=>unsub();
 },[]);
 
 async function movePlayer(id,newStatus){
+
+if(!id) return;
 
 await updateDoc(doc(db,"players",id),{
 status:newStatus
@@ -90,6 +92,8 @@ highlight:!p.highlight
 
 }
 
+/* sorting */
+
 function sortPlayers(list){
 
 if(sort==="birthYear"){
@@ -122,21 +126,7 @@ return list;
 
 }
 
-function sortPlayers(list){
-
-if(sort==="birthYear"){
-return [...list].sort((a,b)=>(a.birthYear||0)-(b.birthYear||0));
-}
-
-if(sort==="position"){
-return [...list].sort((a,b)=>(a.position||"").localeCompare(b.position||""));
-}
-
-return list;
-
-}
-
-/* ADD THIS FUNCTION RIGHT HERE */
+/* days since contact */
 
 function daysSinceLastContact(player){
 
@@ -156,18 +146,7 @@ return diff;
 
 }
 
-function getLastContact(player){
-
-if(!player.contacts || player.contacts.length===0) return "—";
-
-const latest=[...player.contacts]
-.sort((a,b)=>new Date(b.date)-new Date(a.date))[0];
-
-const d = new Date(latest.date);
-return (d.getMonth()+1).toString().padStart(2,"0") + "/" + 
-       d.getDate().toString().padStart(2,"0");
-
-}
+/* search */
 
 const filtered=players.filter(p=>
 p.name?.toLowerCase().includes(search.toLowerCase())
@@ -181,6 +160,8 @@ minHeight:"100vh",
 padding:30,
 fontFamily:"Arial"
 }}>
+
+{/* HEADER */}
 
 <div style={{
 display:"flex",
@@ -211,22 +192,27 @@ onChange={e=>setSearch(e.target.value)}
 </select>
 
 <button onClick={()=>setShowArchive(!showArchive)}>
-Archive </button>
+Archive
+</button>
 
 <button onClick={()=>setShowGhost(true)}>
 Ghost Roster
 </button>
-       
+
 <button onClick={()=>setShowAdd(true)}>
-Add Player </button>
+Add Player
+</button>
 
 </div>
 
 </div>
+
+{/* ARCHIVE */}
 
 {showArchive && (
 
 <div style={{background:"#fff",padding:20,marginBottom:30}}>
+
 <h2>Archived Players</h2>
 
 {players.filter(p=>p.archived).map(p=>(
@@ -236,7 +222,8 @@ Add Player </button>
 {p.name}
 
 <button onClick={()=>restorePlayer(p.id)}>
-Restore </button>
+Restore
+</button>
 
 </div>
 
@@ -245,6 +232,8 @@ Restore </button>
 </div>
 
 )}
+
+{/* BOARD */}
 
 <div style={{
 display:"grid",
@@ -257,7 +246,6 @@ gap:20
 <div key={status}
 
 onDragOver={(e)=>e.preventDefault()}
-
 onDrop={()=>movePlayer(dragPlayer?.id,status)}
 
 style={{
@@ -278,11 +266,8 @@ filtered.filter(p=>p.status===status && !p.archived)
 <div key={p.id}
 
 draggable
-
 onDragStart={()=>setDragPlayer(p)}
-
 onClick={()=>setSelected(p)}
-
 onContextMenu={(e)=>toggleHighlight(e,p)}
 
 style={{
@@ -310,7 +295,7 @@ fontSize:12,
 marginTop:4,
 color:"#555"
 }}>
-Last Contact: {daysSinceLastContact(p)} days
+{daysSinceLastContact(p)}d since contact
 </div>
 
 )}
@@ -345,6 +330,18 @@ style={{cursor:"pointer"}}
 
 </div>
 
+</div>
+
+))}
+
+</div>
+
+))}
+
+</div>
+
+{/* MODALS */}
+
 {showGhost &&
 <GhostRoster onClose={()=>setShowGhost(false)} />
 }
@@ -363,13 +360,5 @@ onClose={()=>setSelected(null)}
 </div>
 
 );
+
 }
-
-
-
-
-
-
-
-
-
