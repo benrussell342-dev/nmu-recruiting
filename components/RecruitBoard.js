@@ -100,6 +100,24 @@ if(sort==="position"){
 return [...list].sort((a,b)=>(a.position||"").localeCompare(b.position||""));
 }
 
+if(sort==="lastContact"){
+
+return [...list].sort((a,b)=>{
+
+const aDate=a.contacts?.length
+? new Date(a.contacts[a.contacts.length-1].date)
+: new Date(0);
+
+const bDate=b.contacts?.length
+? new Date(b.contacts[b.contacts.length-1].date)
+: new Date(0);
+
+return bDate-aDate;
+
+});
+
+}
+
 return list;
 
 }
@@ -154,6 +172,8 @@ onChange={e=>setSearch(e.target.value)}
 <option value="">Sort</option>
 <option value="birthYear">BirthYear</option>
 <option value="position">Position</option>
+<option value="lastContact">Last Contact</option>
+
 </select>
 
 <button onClick={()=>setShowArchive(!showArchive)}>
@@ -295,7 +315,9 @@ style={{cursor:"pointer"}}
 
 </div>
 
-{showGhost && <GhostRoster />}
+{showGhost && 
+  <GhostRoster onClose={()=>setShowGhost(false)} />
+}
 
 {showAdd && <AddPlayerModal onClose={()=>setShowAdd(false)} />}
 
@@ -306,6 +328,7 @@ style={{cursor:"pointer"}}
 );
 
 }
+
 
 
 
