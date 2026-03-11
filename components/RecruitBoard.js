@@ -1,41 +1,44 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect,useState } from "react";
 import { db } from "../lib/firebase";
-import {
-collection,
-onSnapshot,
-deleteDoc,
-doc
-} from "firebase/firestore";
+import { collection,onSnapshot,updateDoc,doc,deleteDoc } from "firebase/firestore";
 
-import PlayerProfile from "./PlayerProfile";
 import AddPlayerModal from "./AddPlayerModal";
+import PlayerProfile from "./PlayerProfile";
 
-const GREEN = "#00563F";
-const GOLD = "#CFB53B";
+const GREEN="#00563F";
+const GOLD="#CFB53B";
+
+const LISTS=[
+"Hot List",
+"Player of Interest",
+"Tracking",
+"Contacted NMU",
+"Committed",
+"Transfer Portal"
+];
 
 export default function RecruitBoard(){
 
-const [players,setPlayers] = useState([]);
-const [selected,setSelected] = useState(null);
-const [showAdd,setShowAdd] = useState(false);
-const [search,setSearch] = useState("");
-const [sort,setSort] = useState("");
-const [showArchive,setShowArchive] = useState(false);
-
-/* FIREBASE LISTENER */
+const [players,setPlayers]=useState([]);
+const [showAdd,setShowAdd]=useState(false);
+const [selected,setSelected]=useState(null);
+const [dragPlayer,setDragPlayer]=useState(null);
+const [search,setSearch]=useState("");
+const [showArchive,setShowArchive]=useState(false);
+const [sort,setSort]=useState("");
 
 useEffect(()=>{
 
-const unsub = onSnapshot(collection(db,"players"),(snap)=>{
+const unsub=onSnapshot(collection(db,"players"),(snapshot)=>{
 
-const data = snap.docs.map(d=>({
-id:d.id,
-...d.data()
+const list=snapshot.docs.map(doc=>({
+id:doc.id,
+...doc.data()
 }));
 
-setPlayers(data);
+setPlayers(list);
 
 });
 
@@ -43,118 +46,103 @@ return ()=>unsub();
 
 },[]);
 
-/* LAST CONTACT */
+async function movePlayer(id,newStatus){
 
-function getLastContact(player){
-
-if(!player.contacts || player.contacts.length===0) return "—";
-
-const latest=[...player.contacts]
-.sort((a,b)=>new Date(b.date)-new Date(a.date))[0];
-
-return latest.date;
+await updateDoc(doc(db,"players",id),{
+status:newStatus
+});
 
 }
 
-/* DELETE PLAYER */
-
 async function deletePlayer(id){
 
-if(!confirm("Delete this player?")) return;
+if(!confirm("Delete player?")) return;
 
 await deleteDoc(doc(db,"players",id));
 
 }
 
-/* FILTER PLAYERS */
+async function archivePlayer(id){
 
-let filtered = players.filter(p=>{
-
-if(showArchive && !p.archived) return false;
-if(!showArchive && p.archived) return false;
-
-return p.name?.toLowerCase().includes(search.toLowerCase());
-
+await updateDoc(doc(db,"players",id),{
+archived:true
 });
 
-/* SORT */
-
-if(sort==="birthyear"){
-filtered.sort((a,b)=>a.birthYear-b.birthYear);
 }
 
-if(sort==="position"){
-filtered.sort((a,b)=>a.position.localeCompare(b.position));
+async function restorePlayer(id){
+
+await updateDoc(doc(db,"players",id),{
+archived:false
+});
+
 }
 
-/* HIGHLIGHT */
-
-function toggleHighlight(e,player){
+async function toggleHighlight(e,p){
 
 e.preventDefault();
 
-player.highlight = !player.highlight;
-
-setPlayers([...players]);
+await updateDoc(doc(db,"players",p.id),{
+highlight:!p.highlight
+});
 
 }
 
-/* DRAG */
+function sortPlayers(list){
 
-function onDragStart(e,id){
-e.dataTransfer.setData("id",id);
+if(sort==="birthYear"){
+return [...list].sort((a,b)=>(a.birthYear||0)-(b.birthYear||0));
 }
 
-function onDrop(e){
-const id=e.dataTransfer.getData("id");
+if(sort==="position"){
+return [...list].sort((a,b)=>(a.position||"").localeCompare(b.position||""));
 }
 
-/* UI */
+return list;
+
+}
+
+const filtered=players.filter(p=>
+p.name?.toLowerCase().includes(search.toLowerCase())
+);
 
 return(
 
-<div>
-
-{/* HEADER */}
-
 <div style={{
 background:GREEN,
-padding:20,
+minHeight:"100vh",
+padding:30,
+fontFamily:"Arial"
+}}>
+
+<div style={{
 display:"flex",
+justifyContent:"space-between",
 alignItems:"center",
-justifyContent:"space-between"
+marginBottom:30
 }}>
 
 <div style={{display:"flex",alignItems:"center",gap:15}}>
-
-<img src="/wildcat.png" style={{height:40}}/>
-
-<h2 style={{color:GOLD}}>NMU Recruiting Board</h2>
-
+<img src="/wildcat.png" style={{height:50}}/>
+<h1 style={{color:GOLD}}>NMU Hockey Recruiting Board</h1>
 </div>
 
-<div style={{display:"flex",gap:10}}>
+<div style={{display:"flex",gap:15}}>
 
 <input
-placeholder="Search Player"
-value={search}
+placeholder="Search player"
 onChange={e=>setSearch(e.target.value)}
 />
 
-<select
-value={sort}
-onChange={e=>setSort(e.target.value)}
-
->
+<select onChange={e=>setSort(e.target.value)}>
 
 <option value="">Sort</option>
-<option value="birthyear">Birthyear</option>
+<option value="birthYear">BirthYear</option>
 <option value="position">Position</option>
-
 </select>
 
 <button onClick={()=>setShowArchive(!showArchive)}>
-{showArchive ? "Back to Board" : "Archive"} </button>
+Archive </button>
 
 <button onClick={()=>setShowAdd(true)}>
 Add Player </button>
@@ -163,60 +151,115 @@ Add Player </button>
 
 </div>
 
-{/* BOARD */}
+{showArchive && (
+
+<div style={{background:"#fff",padding:20,marginBottom:30}}>
+<h2>Archived Players</h2>
+
+{players.filter(p=>p.archived).map(p=>(
+
+<div key={p.id}>
+
+{p.name}
+
+<button onClick={()=>restorePlayer(p.id)}>
+Restore </button>
+
+</div>
+
+))}
+
+</div>
+
+)}
 
 <div style={{
 display:"grid",
-gridTemplateColumns:"repeat(auto-fill,250px)",
-gap:20,
-padding:30
+gridTemplateColumns:"repeat(6,1fr)",
+gap:20
 }}>
 
-{filtered.map(player=>(
+{LISTS.map(status=>(
 
-<div
-key={player.id}
-draggable
-onDragStart={(e)=>onDragStart(e,player.id)}
-onContextMenu={(e)=>toggleHighlight(e,player)}
-onClick={()=>setSelected(player)}
+<div key={status}
+
+onDragOver={(e)=>e.preventDefault()}
+
+onDrop={()=>movePlayer(dragPlayer?.id,status)}
+
 style={{
-background: player.highlight ? "#fff3a0" : "#fff",
+background:"#fff",
+borderRadius:8,
+padding:10,
+minHeight:350
+}}>
+
+<h3 style={{borderBottom:`2px solid ${GOLD}`}}>
+{status}
+</h3>
+
+{sortPlayers(
+filtered.filter(p=>p.status===status && !p.archived)
+).map(p=>(
+
+<div key={p.id}
+
+draggable
+
+onDragStart={()=>setDragPlayer(p)}
+
+onClick={()=>setSelected(p)}
+
+onContextMenu={(e)=>toggleHighlight(e,p)}
+
+style={{
 border:"1px solid #ddd",
+padding:10,
+marginTop:8,
 borderRadius:6,
-padding:15,
 cursor:"pointer",
+background:p.highlight?"#FFF176":"#fff",
 position:"relative"
 }}
+
 >
 
-<b>{player.name}</b>
+<b>{p.name}</b>
 
-<div style={{fontSize:14,marginTop:5}}>
-{player.position} | {player.birthYear}
+<div style={{fontSize:13}}>
+{p.position} • {p.birthYear}
 </div>
 
-{/* LAST CONTACT */}
+<div style={{
+position:"absolute",
+bottom:5,
+right:8,
+display:"flex",
+gap:8
+}}>
 
-<div style={{fontSize:12,color:"#666",marginTop:6}}>
-Last Contact: {getLastContact(player)}
-</div>
-
-{/* DELETE ICON */}
-
-<div
+<span
 onClick={(e)=>{
 e.stopPropagation();
-deletePlayer(player.id);
+archivePlayer(p.id);
 }}
-style={{
-position:"absolute",
-bottom:6,
-right:8,
-cursor:"pointer"
-}}
+style={{cursor:"pointer"}}
+
 >
-🗑️
+
+📦 </span>
+
+<span
+onClick={(e)=>{
+e.stopPropagation();
+deletePlayer(p.id);
+}}
+style={{cursor:"pointer"}}
+
+>
+
+🗑 </span>
+
 </div>
 
 </div>
@@ -225,26 +268,13 @@ cursor:"pointer"
 
 </div>
 
-{/* PLAYER PROFILE */}
+))}
 
-{selected && (
+</div>
 
-<PlayerProfile
-player={selected}
-onClose={()=>setSelected(null)}
-/>
+{showAdd && <AddPlayerModal onClose={()=>setShowAdd(false)} />}
 
-)}
-
-{/* ADD PLAYER */}
-
-{showAdd && (
-
-<AddPlayerModal
-onClose={()=>setShowAdd(false)}
-/>
-
-)}
+{selected && <PlayerProfile player={selected} onClose={()=>setSelected(null)} />}
 
 </div>
 
