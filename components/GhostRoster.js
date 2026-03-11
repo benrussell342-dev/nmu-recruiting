@@ -40,6 +40,7 @@ G:Array(4).fill().map(()=>({name:"",scholarship:"",color:"NEED"}))
 export default function GhostRoster({onClose}){
 
 const [season,setSeason]=useState(SEASONS[0]);
+const [scenario,setScenario]=useState("Default");
 const [rosters,setRosters]=useState({});
 const [money,setMoney]=useState([]);
 const [dragData,setDragData]=useState(null);
@@ -49,26 +50,24 @@ useEffect(()=>{
 async function load(){
 
 const ref=doc(db,"ghostRosters","main");
-
 const snap=await getDoc(ref);
 
 if(snap.exists()){
 
 let data=snap.data();
-
 let updatedRosters=data.rosters||{};
-
-/* ensure all seasons + 4 goalie slots */
 
 SEASONS.forEach(s=>{
 
-if(!updatedRosters[s]) updatedRosters[s]=emptyRoster();
+if(!updatedRosters[s]) updatedRosters[s]={Default:emptyRoster()};
 
-if(updatedRosters[s].G.length<4){
+Object.keys(updatedRosters[s]).forEach(sc=>{
 
-while(updatedRosters[s].G.length<4){
+if(updatedRosters[s][sc].G.length<4){
 
-updatedRosters[s].G.push({
+while(updatedRosters[s][sc].G.length<4){
+
+updatedRosters[s][sc].G.push({
 name:"",
 scholarship:"",
 color:"NEED"
@@ -80,6 +79,8 @@ color:"NEED"
 
 });
 
+});
+
 setRosters(updatedRosters);
 setMoney(data.money||[]);
 
@@ -88,7 +89,7 @@ setMoney(data.money||[]);
 const start={};
 
 SEASONS.forEach(s=>{
-start[s]=emptyRoster();
+start[s]={Default:emptyRoster()};
 });
 
 setRosters(start);
@@ -113,14 +114,14 @@ money:updatedMoney
 
 }
 
-const roster=rosters[season]||emptyRoster();
+const roster=(rosters[season]?.[scenario])||emptyRoster();
 
 function updateSlot(position,index,field,value){
 
 const updated={...rosters};
 
-updated[season][position][index]={
-...updated[season][position][index],
+updated[season][scenario][position][index]={
+...updated[season][scenario][position][index],
 [field]:value
 };
 
@@ -140,12 +141,12 @@ if(!dragData) return;
 
 const updated={...rosters};
 
-const temp=updated[season][position][index];
+const temp=updated[season][scenario][position][index];
 
-updated[season][position][index]=
-updated[season][dragData.position][dragData.index];
+updated[season][scenario][position][index]=
+updated[season][scenario][dragData.position][dragData.index];
 
-updated[season][dragData.position][dragData.index]=temp;
+updated[season][scenario][dragData.position][dragData.index]=temp;
 
 save(updated,money);
 
@@ -219,12 +220,65 @@ alignItems:"center"
 value={season}
 onChange={e=>setSeason(e.target.value)}
 >
-
 {SEASONS.map(s=>(
 <option key={s}>{s}</option>
 ))}
-
 </select>
+
+<select
+value={scenario}
+onChange={e=>setScenario(e.target.value)}
+style={{marginLeft:10}}
+>
+{Object.keys(rosters[season]||{Default:{}}).map(s=>(
+<option key={s}>{s}</option>
+))}
+</select>
+
+<button
+style={{marginLeft:10}}
+onClick={()=>{
+
+const name=prompt("Scenario name");
+
+if(!name) return;
+
+const updated={...rosters};
+
+if(!updated[season]) updated[season]={};
+
+updated[season][name]=emptyRoster();
+
+save(updated,money);
+
+setScenario(name);
+
+}}
+>
++ Scenario
+</button>
+
+<button
+style={{marginLeft:5}}
+onClick={()=>{
+
+if(scenario==="Default"){
+alert("Cannot delete Default scenario");
+return;
+}
+
+const updated={...rosters};
+
+delete updated[season][scenario];
+
+save(updated,money);
+
+setScenario("Default");
+
+}}
+>
+Delete
+</button>
 
 <button onClick={onClose} style={{marginLeft:10}}>
 Back
@@ -235,8 +289,6 @@ Back
 </div>
 
 <div style={{display:"flex",gap:30,marginTop:20}}>
-
-{/* ROSTER GRID */}
 
 <div style={{
 background:"#ccc",
@@ -322,10 +374,7 @@ style={{width:"100%"}}
 
 </div>
 
-{/* spacer after forwards */}
 {i===2 && <div></div>}
-
-{/* spacer after defense */}
 {i===4 && <div></div>}
 
 </>
@@ -334,8 +383,6 @@ style={{width:"100%"}}
 </div>
 
 </div>
-
-{/* SIDE PANEL */}
 
 <div style={{
 background:"#ccc",
