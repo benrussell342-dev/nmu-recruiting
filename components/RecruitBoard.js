@@ -7,6 +7,7 @@ import { collection,onSnapshot,updateDoc,doc,deleteDoc } from "firebase/firestor
 import AddPlayerModal from "./AddPlayerModal";
 import PlayerProfile from "./PlayerProfile";
 import GhostRoster from "./GhostRoster";
+import RecruitingCalendar from "./RecruitingCalendar";
 
 const GREEN="#00563F";
 const GOLD="#CFB53B";
@@ -30,6 +31,7 @@ const [search,setSearch]=useState("");
 const [showArchive,setShowArchive]=useState(false);
 const [sort,setSort]=useState("");
 const [showGhost,setShowGhost]=useState(false);
+const [showCalendar,setShowCalendar]=useState(false);
 
 useEffect(()=>{
 
@@ -195,6 +197,10 @@ onChange={e=>setSearch(e.target.value)}
 Archive
 </button>
 
+<button onClick={()=>setShowCalendar(true)}>
+Calendar
+</button>
+
 <button onClick={()=>setShowGhost(true)}>
 Ghost Roster
 </button>
@@ -342,6 +348,12 @@ style={{cursor:"pointer"}}
 
 {/* MODALS */}
 
+{showCalendar &&
+<RecruitingCalendar
+onClose={()=>setShowCalendar(false)}
+/>
+}
+
 {showGhost &&
 <GhostRoster onClose={()=>setShowGhost(false)} />
 }
@@ -362,3 +374,4 @@ onClose={()=>setSelected(null)}
 );
 
 }
+
