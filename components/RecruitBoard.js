@@ -345,19 +345,26 @@ style={{cursor:"pointer"}}
 
 </div>
 
-{showGhost && 
-  <GhostRoster onClose={()=>setShowGhost(false)} />
+{showGhost &&
+<GhostRoster onClose={()=>setShowGhost(false)} />
 }
 
-{showAdd && <AddPlayerModal onClose={()=>setShowAdd(false)} />}
+{showAdd &&
+<AddPlayerModal onClose={()=>setShowAdd(false)} />
+}
 
-{selected && <PlayerProfile player={selected} onClose={()=>setSelected(null)} />}
+{selected &&
+<PlayerProfile
+player={selected}
+onClose={()=>setSelected(null)}
+/>
+}
 
 </div>
 
 );
-
 }
+
 
 
 
