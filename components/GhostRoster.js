@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState,useEffect } from "react";
+import { db } from "../lib/firebase";
+import { doc,setDoc,getDoc } from "firebase/firestore";
 
 const GREEN="#00563F";
 const GOLD="#CFB53B";
@@ -22,15 +24,15 @@ const SEASONS=[
 "2029-30"
 ];
 
-function createEmptySeason(){
+function emptyRoster(){
 
 return{
-LW:Array(6).fill({name:"",scholarship:"",color:"NEED"}),
-C:Array(6).fill({name:"",scholarship:"",color:"NEED"}),
-RW:Array(6).fill({name:"",scholarship:"",color:"NEED"}),
-LD:Array(6).fill({name:"",scholarship:"",color:"NEED"}),
-RD:Array(6).fill({name:"",scholarship:"",color:"NEED"}),
-G:Array(3).fill({name:"",scholarship:"",color:"NEED"})
+LW:Array(6).fill().map(()=>({name:"",scholarship:"",color:"NEED"})),
+C:Array(6).fill().map(()=>({name:"",scholarship:"",color:"NEED"})),
+RW:Array(6).fill().map(()=>({name:"",scholarship:"",color:"NEED"})),
+LD:Array(6).fill().map(()=>({name:"",scholarship:"",color:"NEED"})),
+RD:Array(6).fill().map(()=>({name:"",scholarship:"",color:"NEED"})),
+G:Array(3).fill().map(()=>({name:"",scholarship:"",color:"NEED"}))
 };
 
 }
@@ -39,18 +41,57 @@ export default function GhostRoster({onClose}){
 
 const [season,setSeason]=useState(SEASONS[0]);
 
-const [rosters,setRosters]=useState({
-"2026-27":createEmptySeason(),
-"2027-28":createEmptySeason(),
-"2028-29":createEmptySeason(),
-"2029-30":createEmptySeason()
-});
-
+const [rosters,setRosters]=useState({});
 const [money,setMoney]=useState([]);
 
 const [dragData,setDragData]=useState(null);
 
-const roster=rosters[season];
+useEffect(()=>{
+
+async function load(){
+
+const ref=doc(db,"ghostRosters","main");
+
+const snap=await getDoc(ref);
+
+if(snap.exists()){
+
+const data=snap.data();
+
+setRosters(data.rosters);
+setMoney(data.money||[]);
+
+}else{
+
+const start={};
+
+SEASONS.forEach(s=>{
+start[s]=emptyRoster();
+});
+
+setRosters(start);
+
+}
+
+}
+
+load();
+
+},[]);
+
+async function save(updatedRosters,updatedMoney){
+
+setRosters(updatedRosters);
+setMoney(updatedMoney);
+
+await setDoc(doc(db,"ghostRosters","main"),{
+rosters:updatedRosters,
+money:updatedMoney
+});
+
+}
+
+const roster=rosters[season]||emptyRoster();
 
 function updateSlot(position,index,field,value){
 
@@ -61,7 +102,7 @@ updated[season][position][index]={
 [field]:value
 };
 
-setRosters(updated);
+save(updated,money);
 
 }
 
@@ -84,7 +125,7 @@ updated[season][dragData.position][dragData.index];
 
 updated[season][dragData.position][dragData.index]=temp;
 
-setRosters(updated);
+save(updated,money);
 
 }
 
@@ -98,7 +139,13 @@ total+=parseFloat(p.scholarship)||0;
 });
 });
 
-return total.toFixed(2);
+return total;
+
+}
+
+function scholarshipRemaining(){
+
+return (18-scholarshipTotal()).toFixed(2);
 
 }
 
@@ -107,14 +154,12 @@ function classCounts(){
 const counts={SR:0,JR:0,SO:0,FR:0};
 
 Object.values(roster).forEach(group=>{
-
 group.forEach(p=>{
 if(p.color==="SR") counts.SR++;
 if(p.color==="JR") counts.JR++;
 if(p.color==="SO") counts.SO++;
 if(p.color==="FR") counts.FR++;
 });
-
 });
 
 return counts;
@@ -153,9 +198,9 @@ value={season}
 onChange={e=>setSeason(e.target.value)}
 >
 
-{SEASONS.map(s=>
+{SEASONS.map(s=>(
 <option key={s}>{s}</option>
-)}
+))}
 
 </select>
 
@@ -180,7 +225,7 @@ flex:3
 <div style={{
 display:"grid",
 gridTemplateColumns:"repeat(6,1fr)",
-gap:5
+gap:4
 }}>
 
 {POSITIONS.map(pos=>(
@@ -238,9 +283,7 @@ textAlign:"center"
 <select
 value={p.color}
 onChange={e=>updateSlot(pos,i,"color",e.target.value)}
-style={{
-width:"100%"
-}}
+style={{width:"100%"}}
 >
 
 <option value="NEED">Need</option>
@@ -276,13 +319,22 @@ width:350
 <div style={{
 background:"#fff",
 padding:10,
-fontWeight:"bold",
-marginBottom:10
+fontWeight:"bold"
 }}>
-{scholarshipTotal()}
+{scholarshipTotal().toFixed(2)}
 </div>
 
-<h3>Class Count</h3>
+<h3 style={{marginTop:10}}>Scholarship Remaining</h3>
+
+<div style={{
+background:"#fff",
+padding:10,
+fontWeight:"bold"
+}}>
+{scholarshipRemaining()}
+</div>
+
+<h3 style={{marginTop:20}}>Class Count</h3>
 
 <div style={{background:"#ff0000",padding:5}}>SR = {counts.SR}</div>
 <div style={{background:"#ffff00",padding:5}}>JR = {counts.JR}</div>
@@ -299,9 +351,11 @@ marginBottom:10
 placeholder="Player"
 value={m.name}
 onChange={e=>{
+
 const updated=[...money];
 updated[i].name=e.target.value;
-setMoney(updated);
+save(rosters,updated);
+
 }}
 />
 
@@ -309,9 +363,11 @@ setMoney(updated);
 placeholder="Amount"
 value={m.amount}
 onChange={e=>{
+
 const updated=[...money];
 updated[i].amount=parseInt(e.target.value)||0;
-setMoney(updated);
+save(rosters,updated);
+
 }}
 style={{width:80}}
 />
@@ -320,7 +376,7 @@ style={{width:80}}
 
 ))}
 
-<button onClick={()=>setMoney([...money,{name:"",amount:0}])}>
+<button onClick={()=>save(rosters,[...money,{name:"",amount:0}])}>
 Add Player
 </button>
 
