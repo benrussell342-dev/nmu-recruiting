@@ -1,125 +1,133 @@
 "use client";
 
-import { useState,useEffect } from "react";
-import { db } from "../lib/firebase";
-import { collection,onSnapshot } from "firebase/firestore";
+import { useState } from "react";
 
 const GREEN="#00563F";
 const GOLD="#CFB53B";
 
-const CLASS_COLORS={
+const COLORS={
+NEED:"#ff00ff",
 FR:"#00ff00",
 SO:"#4f83cc",
 JR:"#ffff00",
-SR:"#ff0000",
-NEED:"#ff00ff"
+SR:"#ff0000"
 };
+
+const POSITIONS=["LW","C","RW","LD","RD","G"];
+
+const SEASONS=[
+"2026-27",
+"2027-28",
+"2028-29",
+"2029-30"
+];
+
+function createEmptySeason(){
+
+return{
+LW:Array(6).fill({name:"",scholarship:"",color:"NEED"}),
+C:Array(6).fill({name:"",scholarship:"",color:"NEED"}),
+RW:Array(6).fill({name:"",scholarship:"",color:"NEED"}),
+LD:Array(6).fill({name:"",scholarship:"",color:"NEED"}),
+RD:Array(6).fill({name:"",scholarship:"",color:"NEED"}),
+G:Array(3).fill({name:"",scholarship:"",color:"NEED"})
+};
+
+}
 
 export default function GhostRoster({onClose}){
 
-const [players,setPlayers]=useState([]);
+const [season,setSeason]=useState(SEASONS[0]);
 
-const [slots,setSlots]=useState({
-LW:["","","","",""],
-C:["","","","",""],
-RW:["","","","",""],
-LD:["","","","",""],
-RD:["","","","",""],
-G:["","","",""]
+const [rosters,setRosters]=useState({
+"2026-27":createEmptySeason(),
+"2027-28":createEmptySeason(),
+"2028-29":createEmptySeason(),
+"2029-30":createEmptySeason()
 });
 
-const [scholarships,setScholarships]=useState({});
-const [money,setMoney]=useState({});
+const [money,setMoney]=useState([]);
 
-useEffect(()=>{
+const [dragData,setDragData]=useState(null);
 
-const unsub=onSnapshot(collection(db,"players"),(snap)=>{
+const roster=rosters[season];
 
-setPlayers(
-snap.docs.map(doc=>({
-id:doc.id,
-...doc.data()
-}))
-);
+function updateSlot(position,index,field,value){
 
-});
+const updated={...rosters};
 
-return ()=>unsub();
+updated[season][position][index]={
+...updated[season][position][index],
+[field]:value
+};
 
-},[]);
-
-function updateSlot(position,index,value){
-
-const updated={...slots};
-updated[position][index]=value;
-
-setSlots(updated);
+setRosters(updated);
 
 }
 
-function updateScholarship(name,value){
+function handleDragStart(position,index){
 
-setScholarships({
-...scholarships,
-[name]:parseFloat(value)||0
-});
+setDragData({position,index});
 
 }
 
-function updateMoney(name,value){
+function handleDrop(position,index){
 
-setMoney({
-...money,
-[name]:parseInt(value)||0
-});
+if(!dragData) return;
 
-}
+const updated={...rosters};
 
-function getScholarshipTotal(){
+const temp=updated[season][position][index];
 
-return Object.values(scholarships)
-.reduce((a,b)=>a+b,0);
+updated[season][position][index]=
+updated[season][dragData.position][dragData.index];
 
-}
+updated[season][dragData.position][dragData.index]=temp;
 
-function getRosterCount(){
-
-let count=0;
-
-Object.values(slots).forEach(arr=>{
-arr.forEach(p=>{
-if(p) count++;
-});
-});
-
-return count;
+setRosters(updated);
 
 }
 
-function getClassCount(){
+function scholarshipTotal(){
+
+let total=0;
+
+Object.values(roster).forEach(group=>{
+group.forEach(p=>{
+total+=parseFloat(p.scholarship)||0;
+});
+});
+
+return total.toFixed(2);
+
+}
+
+function classCounts(){
 
 const counts={SR:0,JR:0,SO:0,FR:0};
 
-players.forEach(p=>{
-if(!p.classYear) return;
-counts[p.classYear]=(counts[p.classYear]||0)+1;
+Object.values(roster).forEach(group=>{
+
+group.forEach(p=>{
+if(p.color==="SR") counts.SR++;
+if(p.color==="JR") counts.JR++;
+if(p.color==="SO") counts.SO++;
+if(p.color==="FR") counts.FR++;
+});
+
 });
 
 return counts;
 
 }
 
-function getColor(name){
+function moneyTotal(){
 
-const p=players.find(pl=>pl.name===name);
-
-if(!p) return CLASS_COLORS.NEED;
-
-return CLASS_COLORS[p.classYear]||"#ccc";
+return money.reduce((a,b)=>a+(b.amount||0),0);
 
 }
 
-const classCounts=getClassCount();
+const counts=classCounts();
 
 return(
 
@@ -133,21 +141,41 @@ fontFamily:"Arial"
 <div style={{
 display:"flex",
 justifyContent:"space-between",
-alignItems:"center",
-marginBottom:20
+alignItems:"center"
 }}>
 
-<h1 style={{color:GOLD}}>Ghost Roster</h1>
+<h1 style={{color:GOLD}}>Ghost Rosters</h1>
 
-<button onClick={onClose}>Back</button>
+<div>
+
+<select
+value={season}
+onChange={e=>setSeason(e.target.value)}
+>
+
+{SEASONS.map(s=>
+<option key={s}>{s}</option>
+)}
+
+</select>
+
+<button onClick={onClose} style={{marginLeft:10}}>
+Back
+</button>
 
 </div>
 
-<div style={{display:"flex",gap:30}}>
+</div>
+
+<div style={{display:"flex",gap:30,marginTop:20}}>
 
 {/* ROSTER GRID */}
 
-<div style={{background:"#ddd",padding:20,flex:3}}>
+<div style={{
+background:"#ccc",
+padding:10,
+flex:3
+}}>
 
 <div style={{
 display:"grid",
@@ -155,7 +183,7 @@ gridTemplateColumns:"repeat(6,1fr)",
 gap:5
 }}>
 
-{["LW","C","RW","LD","RD","G"].map(pos=>(
+{POSITIONS.map(pos=>(
 
 <div key={pos}>
 
@@ -169,35 +197,59 @@ fontWeight:"bold"
 {pos}
 </div>
 
-{slots[pos].map((name,i)=>(
+{roster[pos].map((p,i)=>(
 
-<div key={i} style={{border:"1px solid #222"}}>
+<div
+key={i}
+draggable
+onDragStart={()=>handleDragStart(pos,i)}
+onDragOver={e=>e.preventDefault()}
+onDrop={()=>handleDrop(pos,i)}
+style={{
+border:"1px solid #222",
+marginBottom:2
+}}
+>
 
 <input
-value={name}
+value={p.name}
 placeholder="Player"
-onChange={e=>updateSlot(pos,i,e.target.value)}
+onChange={e=>updateSlot(pos,i,"name",e.target.value)}
+style={{
+width:"100%",
+background:COLORS[p.color],
+border:"none",
+textAlign:"center",
+fontWeight:"bold"
+}}
+/>
+
+<input
+value={p.scholarship}
+placeholder="0.00"
+onChange={e=>updateSlot(pos,i,"scholarship",e.target.value)}
 style={{
 width:"100%",
 border:"none",
-padding:5,
-background:getColor(name),
-fontWeight:"bold",
 textAlign:"center"
 }}
 />
 
-<input
-placeholder="Scholarship"
-value={scholarships[name]||""}
-onChange={e=>updateScholarship(name,e.target.value)}
+<select
+value={p.color}
+onChange={e=>updateSlot(pos,i,"color",e.target.value)}
 style={{
-width:"100%",
-border:"none",
-textAlign:"center",
-background:"#eee"
+width:"100%"
 }}
-/>
+>
+
+<option value="NEED">Need</option>
+<option value="FR">FR</option>
+<option value="SO">SO</option>
+<option value="JR">JR</option>
+<option value="SR">SR</option>
+
+</select>
 
 </div>
 
@@ -211,69 +263,56 @@ background:"#eee"
 
 </div>
 
-{/* RIGHT PANEL */}
+{/* SIDE PANEL */}
 
-<div style={{background:"#ddd",padding:20,width:350}}>
-
-<div style={{marginBottom:20}}>
+<div style={{
+background:"#ccc",
+padding:10,
+width:350
+}}>
 
 <h3>Scholarship Count</h3>
 
 <div style={{
 background:"#fff",
 padding:10,
-fontSize:18,
-fontWeight:"bold"
+fontWeight:"bold",
+marginBottom:10
 }}>
-{getScholarshipTotal().toFixed(2)}
+{scholarshipTotal()}
 </div>
-
-</div>
-
-<div style={{marginBottom:20}}>
-
-<h3>Roster Count</h3>
-
-<div style={{
-background:"#fff",
-padding:10,
-fontSize:18,
-fontWeight:"bold"
-}}>
-{getRosterCount()}
-</div>
-
-</div>
-
-<div style={{marginBottom:20}}>
 
 <h3>Class Count</h3>
 
-<div style={{background:"#ff0000",padding:5}}>SR = {classCounts.SR}</div>
-<div style={{background:"#ffff00",padding:5}}>JR = {classCounts.JR}</div>
-<div style={{background:"#4f83cc",padding:5}}>SO = {classCounts.SO}</div>
-<div style={{background:"#00ff00",padding:5}}>FR = {classCounts.FR}</div>
+<div style={{background:"#ff0000",padding:5}}>SR = {counts.SR}</div>
+<div style={{background:"#ffff00",padding:5}}>JR = {counts.JR}</div>
+<div style={{background:"#4f83cc",padding:5}}>SO = {counts.SO}</div>
+<div style={{background:"#00ff00",padding:5}}>FR = {counts.FR}</div>
 
-</div>
+<h3 style={{marginTop:20}}>Money</h3>
 
-<h3>Money</h3>
+{money.map((m,i)=>(
 
-<div style={{maxHeight:300,overflow:"auto"}}>
-
-{players.map(p=>(
-
-<div key={p.id} style={{
-display:"flex",
-justifyContent:"space-between",
-marginBottom:5
-}}>
-
-<div>{p.name}</div>
+<div key={i} style={{display:"flex",gap:5}}>
 
 <input
-type="number"
-value={money[p.name]||""}
-onChange={e=>updateMoney(p.name,e.target.value)}
+placeholder="Player"
+value={m.name}
+onChange={e=>{
+const updated=[...money];
+updated[i].name=e.target.value;
+setMoney(updated);
+}}
+/>
+
+<input
+placeholder="Amount"
+value={m.amount}
+onChange={e=>{
+const updated=[...money];
+updated[i].amount=parseInt(e.target.value)||0;
+setMoney(updated);
+}}
 style={{width:80}}
 />
 
@@ -281,15 +320,12 @@ style={{width:80}}
 
 ))}
 
-</div>
+<button onClick={()=>setMoney([...money,{name:"",amount:0}])}>
+Add Player
+</button>
 
-<div style={{
-marginTop:10,
-fontWeight:"bold"
-}}>
-
-TOTAL ${Object.values(money).reduce((a,b)=>a+b,0).toLocaleString()}
-
+<div style={{marginTop:10,fontWeight:"bold"}}>
+TOTAL ${moneyTotal().toLocaleString()}
 </div>
 
 </div>
