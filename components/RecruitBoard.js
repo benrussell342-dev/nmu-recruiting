@@ -43,7 +43,7 @@ return ()=>unsub();
 
 },[]);
 
-/* LAST CONTACT HELPER */
+/* LAST CONTACT */
 
 function getLastContact(player){
 
@@ -66,7 +66,7 @@ await deleteDoc(doc(db,"players",id));
 
 }
 
-/* FILTER */
+/* FILTER PLAYERS */
 
 let filtered = players.filter(p=>{
 
@@ -99,7 +99,7 @@ setPlayers([...players]);
 
 }
 
-/* DRAG DROP */
+/* DRAG */
 
 function onDragStart(e,id){
 e.dataTransfer.setData("id",id);
@@ -108,6 +108,8 @@ e.dataTransfer.setData("id",id);
 function onDrop(e){
 const id=e.dataTransfer.getData("id");
 }
+
+/* UI */
 
 return(
 
@@ -193,6 +195,8 @@ position:"relative"
 <div style={{fontSize:14,marginTop:5}}>
 {player.position} | {player.birthYear}
 </div>
+
+{/* LAST CONTACT */}
 
 <div style={{fontSize:12,color:"#666",marginTop:6}}>
 Last Contact: {getLastContact(player)}
