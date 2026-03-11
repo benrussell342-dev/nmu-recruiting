@@ -76,20 +76,29 @@ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.g
 
 function addTrip(day){
 
-const date=new Date(year,month,day);
+const date = new Date(year,month,day);
 
-const id=Date.now().toString();
+const formatted =
+date.getFullYear()+"-"+String(date.getMonth()+1).padStart(2,"0")+"-"+String(date.getDate()).padStart(2,"0");
+
+const id = Date.now().toString();
 
 const updated={...trips};
 
 updated[id]={
 coach:"",
-start:formatDate(date),
-end:formatDate(date),
+start:formatted,
+end:formatted,
 games:[]
 };
 
+/* save trip */
+
 save(updated);
+
+/* open trip editor immediately */
+
+setSelected(id);
 
 }
 
@@ -267,7 +276,10 @@ color:"#fff"
 ))}
 
 <button
-onClick={()=>addTrip(day)}
+onClick={(e)=>{
+e.stopPropagation();
+addTrip(day);
+}}
 style={{
 marginTop:6,
 fontSize:12
