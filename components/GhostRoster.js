@@ -91,7 +91,17 @@ money:updatedMoney
 
 }
 
-const roster=rosters[season]||emptyRoster();
+let roster = rosters[season] || emptyRoster();
+
+/* ensure 4 goalie slots */
+
+if(roster.G && roster.G.length < 4){
+
+while(roster.G.length < 4){
+roster.G.push({name:"",scholarship:"",color:"NEED"});
+}
+
+}const roster=rosters[season]||emptyRoster();
 
 function updateSlot(position,index,field,value){
 
