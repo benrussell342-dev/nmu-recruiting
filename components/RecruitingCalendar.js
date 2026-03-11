@@ -7,23 +7,25 @@ import { doc,setDoc,getDoc } from "firebase/firestore";
 const GREEN="#00563F";
 const GOLD="#CFB53B";
 
-const COACHES=[
-"Dave Shyiak",
-"Andy Contois",
-"Phil Fox",
-"Ben Russell"
-];
+/* coach colors */
+
+const COACHES={
+"Dave Shyiak":"#e74c3c",
+"Andy Contois":"#3498db",
+"Phil Fox":"#27ae60",
+"Ben Russell":"#f1c40f"
+};
 
 const MONTHS=[
-"January","February","March","April",
-"May","June","July","August",
-"September","October","November","December"
+"January","February","March","April","May","June",
+"July","August","September","October","November","December"
 ];
 
 export default function RecruitingCalendar({onClose}){
 
 const [month,setMonth]=useState(new Date().getMonth());
 const [year,setYear]=useState(new Date().getFullYear());
+
 const [trips,setTrips]=useState({});
 const [selected,setSelected]=useState(null);
 
@@ -32,13 +34,10 @@ useEffect(()=>{
 async function load(){
 
 const ref=doc(db,"calendar","recruiting");
-
 const snap=await getDoc(ref);
 
 if(snap.exists()){
-
 setTrips(snap.data().trips||{});
-
 }
 
 }
@@ -57,15 +56,20 @@ trips:updated
 
 }
 
+/* add trip */
+
 function addTrip(day){
 
-const key=`${year}-${month}-${day}`;
+const startDate=`${year}-${month}-${day}`;
+
+const id=Date.now().toString();
 
 const updated={...trips};
 
-updated[key]={
+updated[id]={
 coach:"",
-location:"",
+start:startDate,
+end:startDate,
 games:[]
 };
 
@@ -73,14 +77,34 @@ save(updated);
 
 }
 
+/* delete trip */
+
+function deleteTrip(id){
+
+if(!confirm("Delete trip?")) return;
+
+const updated={...trips};
+
+delete updated[id];
+
+save(updated);
+
+setSelected(null);
+
+}
+
+/* add game */
+
 function addGame(){
 
 const updated={...trips};
 
 updated[selected].games.push({
 date:"",
-home:"",
-away:""
+team1:"",
+team2:"",
+time:"",
+location:""
 });
 
 save(updated);
@@ -88,6 +112,23 @@ save(updated);
 }
 
 const daysInMonth=new Date(year,month+1,0).getDate();
+
+/* check if trip spans day */
+
+function tripsForDay(day){
+
+const date=new Date(year,month,day);
+
+return Object.entries(trips).filter(([id,t])=>{
+
+const start=new Date(t.start);
+const end=new Date(t.end);
+
+return date>=start && date<=end;
+
+});
+
+}
 
 return(
 
@@ -135,6 +176,8 @@ style={{width:80}}
 
 </div>
 
+{/* calendar grid */}
+
 <div style={{
 display:"grid",
 gridTemplateColumns:"repeat(7,1fr)",
@@ -146,52 +189,53 @@ marginTop:30
 
 const day=i+1;
 
-const key=`${year}-${month}-${day}`;
-
-const trip=trips[key];
+const dayTrips=tripsForDay(day);
 
 return(
 
-<div
-key={day}
+<div key={day}
+
 style={{
 background:"#fff",
-minHeight:100,
+minHeight:120,
 padding:8,
 borderRadius:6
 }}
+
 >
 
 <b>{day}</b>
 
-{trip ? (
+{dayTrips.map(([id,t])=>(
 
-<div
-onClick={()=>setSelected(key)}
+<div key={id}
+
+onClick={()=>setSelected(id)}
+
 style={{
-marginTop:5,
-background:GOLD,
+marginTop:6,
 padding:4,
-cursor:"pointer"
+background:COACHES[t.coach]||"#ccc",
+cursor:"pointer",
+borderRadius:4
 }}
+
 >
 
-{trip.coach}
+{t.coach || "Trip"}
 
 </div>
 
-):(
+))}
 
 <button
 onClick={()=>addTrip(day)}
-style={{marginTop:5}}
+style={{marginTop:5,fontSize:12}}
 >
 
 Add Trip
 
 </button>
-
-)}
 
 </div>
 
@@ -200,6 +244,8 @@ Add Trip
 })}
 
 </div>
+
+{/* trip editor */}
 
 {selected && (
 
@@ -218,7 +264,7 @@ alignItems:"center"
 <div style={{
 background:"#fff",
 padding:30,
-width:500
+width:600
 }}>
 
 <h2>Trip Details</h2>
@@ -228,7 +274,6 @@ value={trips[selected].coach}
 onChange={e=>{
 
 const updated={...trips};
-
 updated[selected].coach=e.target.value;
 
 save(updated);
@@ -238,40 +283,96 @@ save(updated);
 
 <option value="">Coach</option>
 
-{COACHES.map(c=>(
+{Object.keys(COACHES).map(c=>(
 <option key={c}>{c}</option>
 ))}
 
 </select>
 
+<div style={{marginTop:10}}>
+
+Start Date
+
 <input
-placeholder="Location"
-value={trips[selected].location}
+type="date"
+value={trips[selected].start}
 onChange={e=>{
 
 const updated={...trips};
-
-updated[selected].location=e.target.value;
+updated[selected].start=e.target.value;
 
 save(updated);
 
 }}
-style={{display:"block",marginTop:10}}
 />
+
+</div>
+
+<div style={{marginTop:10}}>
+
+End Date
+
+<input
+type="date"
+value={trips[selected].end}
+onChange={e=>{
+
+const updated={...trips};
+updated[selected].end=e.target.value;
+
+save(updated);
+
+}}
+/>
+
+</div>
 
 <h3 style={{marginTop:20}}>Games</h3>
 
 {trips[selected].games.map((g,i)=>(
 
-<div key={i} style={{marginBottom:10}}>
+<div key={i}
+
+style={{
+border:"1px solid #ddd",
+padding:10,
+marginBottom:10
+}}
+
+>
 
 <input
-placeholder="Date"
+placeholder="Team 1"
+value={g.team1}
+onChange={e=>{
+
+const updated={...trips};
+updated[selected].games[i].team1=e.target.value;
+
+save(updated);
+
+}}
+/>
+
+<input
+placeholder="Team 2"
+value={g.team2}
+onChange={e=>{
+
+const updated={...trips};
+updated[selected].games[i].team2=e.target.value;
+
+save(updated);
+
+}}
+/>
+
+<input
+type="date"
 value={g.date}
 onChange={e=>{
 
 const updated={...trips};
-
 updated[selected].games[i].date=e.target.value;
 
 save(updated);
@@ -280,13 +381,12 @@ save(updated);
 />
 
 <input
-placeholder="Away"
-value={g.away}
+type="time"
+value={g.time}
 onChange={e=>{
 
 const updated={...trips};
-
-updated[selected].games[i].away=e.target.value;
+updated[selected].games[i].time=e.target.value;
 
 save(updated);
 
@@ -294,13 +394,12 @@ save(updated);
 />
 
 <input
-placeholder="Home"
-value={g.home}
+placeholder="Location"
+value={g.location}
 onChange={e=>{
 
 const updated={...trips};
-
-updated[selected].games[i].home=e.target.value;
+updated[selected].games[i].location=e.target.value;
 
 save(updated);
 
@@ -311,7 +410,18 @@ save(updated);
 
 ))}
 
-<button onClick={addGame}>Add Game</button>
+<button onClick={addGame}>
+Add Game
+</button>
+
+<button
+onClick={()=>deleteTrip(selected)}
+style={{marginLeft:10}}
+>
+
+Delete Trip
+
+</button>
 
 <button
 onClick={()=>setSelected(null)}
