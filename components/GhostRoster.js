@@ -32,7 +32,7 @@ C:Array(6).fill().map(()=>({name:"",scholarship:"",color:"NEED"})),
 RW:Array(6).fill().map(()=>({name:"",scholarship:"",color:"NEED"})),
 LD:Array(6).fill().map(()=>({name:"",scholarship:"",color:"NEED"})),
 RD:Array(6).fill().map(()=>({name:"",scholarship:"",color:"NEED"})),
-G:Array(3).fill().map(()=>({name:"",scholarship:"",color:"NEED"}))
+G:Array(4).fill().map(()=>({name:"",scholarship:"",color:"NEED"}))
 };
 
 }
