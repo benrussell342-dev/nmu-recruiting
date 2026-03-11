@@ -7,11 +7,19 @@ import { collection,onSnapshot } from "firebase/firestore";
 const GREEN="#00563F";
 const GOLD="#CFB53B";
 
-export default function GhostRoster(){
+const CLASS_COLORS={
+FR:"#00ff00",
+SO:"#4f83cc",
+JR:"#ffff00",
+SR:"#ff0000",
+NEED:"#ff00ff"
+};
+
+export default function GhostRoster({onClose}){
 
 const [players,setPlayers]=useState([]);
 
-const [roster,setRoster]=useState({
+const [slots,setSlots]=useState({
 LW:["","","","",""],
 C:["","","","",""],
 RW:["","","","",""],
@@ -21,10 +29,11 @@ G:["","","",""]
 });
 
 const [scholarships,setScholarships]=useState({});
+const [money,setMoney]=useState({});
 
 useEffect(()=>{
 
-const unsub=onSnapshot(collection(db,"players"),snap=>{
+const unsub=onSnapshot(collection(db,"players"),(snap)=>{
 
 setPlayers(
 snap.docs.map(doc=>({
@@ -39,13 +48,12 @@ return ()=>unsub();
 
 },[]);
 
-function updateSlot(position,index,name){
+function updateSlot(position,index,value){
 
-const updated={...roster};
+const updated={...slots};
+updated[position][index]=value;
 
-updated[position][index]=name;
-
-setRoster(updated);
+setSlots(updated);
 
 }
 
@@ -58,37 +66,56 @@ setScholarships({
 
 }
 
-function getTotalScholarships(){
+function updateMoney(name,value){
+
+setMoney({
+...money,
+[name]:parseInt(value)||0
+});
+
+}
+
+function getScholarshipTotal(){
 
 return Object.values(scholarships)
 .reduce((a,b)=>a+b,0);
 
 }
 
-function getRemaining(){
+function getRosterCount(){
 
-return (18-getTotalScholarships()).toFixed(2);
+let count=0;
+
+Object.values(slots).forEach(arr=>{
+arr.forEach(p=>{
+if(p) count++;
+});
+});
+
+return count;
 
 }
 
 function getClassCount(){
 
-const counts={
-SR:0,
-JR:0,
-SO:0,
-FR:0
-};
+const counts={SR:0,JR:0,SO:0,FR:0};
 
 players.forEach(p=>{
-
 if(!p.classYear) return;
-
 counts[p.classYear]=(counts[p.classYear]||0)+1;
-
 });
 
 return counts;
+
+}
+
+function getColor(name){
+
+const p=players.find(pl=>pl.name===name);
+
+if(!p) return CLASS_COLORS.NEED;
+
+return CLASS_COLORS[p.classYear]||"#ccc";
 
 }
 
@@ -100,32 +127,32 @@ return(
 background:GREEN,
 minHeight:"100vh",
 padding:30,
-color:"#000",
 fontFamily:"Arial"
 }}>
 
-<h1 style={{
-color:GOLD,
-textAlign:"center",
-marginBottom:30
+<div style={{
+display:"flex",
+justifyContent:"space-between",
+alignItems:"center",
+marginBottom:20
 }}>
-Ghost Roster
-</h1>
+
+<h1 style={{color:GOLD}}>Ghost Roster</h1>
+
+<button onClick={onClose}>Back</button>
+
+</div>
 
 <div style={{display:"flex",gap:30}}>
 
-{/* Roster grid */}
+{/* ROSTER GRID */}
 
-<div style={{
-background:"#ddd",
-padding:20,
-flex:3
-}}>
+<div style={{background:"#ddd",padding:20,flex:3}}>
 
 <div style={{
 display:"grid",
 gridTemplateColumns:"repeat(6,1fr)",
-gap:10
+gap:5
 }}>
 
 {["LW","C","RW","LD","RD","G"].map(pos=>(
@@ -142,21 +169,35 @@ fontWeight:"bold"
 {pos}
 </div>
 
-{roster[pos].map((player,i)=>(
+{slots[pos].map((name,i)=>(
+
+<div key={i} style={{border:"1px solid #222"}}>
 
 <input
-key={i}
-value={player}
+value={name}
 placeholder="Player"
 onChange={e=>updateSlot(pos,i,e.target.value)}
 style={{
 width:"100%",
-padding:6,
-border:"1px solid #999"
+border:"none",
+padding:5,
+background:getColor(name),
+fontWeight:"bold",
+textAlign:"center"
 }}
 />
 
-))}
+<input
+placeholder="Scholarship"
+value={scholarships[name]||""}
+onChange={e=>updateScholarship(name,e.target.value)}
+style={{
+width:"100%",
+border:"none",
+textAlign:"center",
+background:"#eee"
+}}
+/>
 
 </div>
 
@@ -164,15 +205,15 @@ border:"1px solid #999"
 
 </div>
 
+))}
+
 </div>
 
-{/* Right side panel */}
+</div>
 
-<div style={{
-background:"#ddd",
-padding:20,
-flex:1
-}}>
+{/* RIGHT PANEL */}
+
+<div style={{background:"#ddd",padding:20,width:350}}>
 
 <div style={{marginBottom:20}}>
 
@@ -184,22 +225,7 @@ padding:10,
 fontSize:18,
 fontWeight:"bold"
 }}>
-{getTotalScholarships().toFixed(2)}
-</div>
-
-</div>
-
-<div style={{marginBottom:20}}>
-
-<h3>Money Remaining</h3>
-
-<div style={{
-background:"#fff",
-padding:10,
-fontSize:18,
-fontWeight:"bold"
-}}>
-{getRemaining()}
+{getScholarshipTotal().toFixed(2)}
 </div>
 
 </div>
@@ -214,7 +240,7 @@ padding:10,
 fontSize:18,
 fontWeight:"bold"
 }}>
-{players.length}
+{getRosterCount()}
 </div>
 
 </div>
@@ -223,14 +249,14 @@ fontWeight:"bold"
 
 <h3>Class Count</h3>
 
-<div>SR = {classCounts.SR}</div>
-<div>JR = {classCounts.JR}</div>
-<div>SO = {classCounts.SO}</div>
-<div>FR = {classCounts.FR}</div>
+<div style={{background:"#ff0000",padding:5}}>SR = {classCounts.SR}</div>
+<div style={{background:"#ffff00",padding:5}}>JR = {classCounts.JR}</div>
+<div style={{background:"#4f83cc",padding:5}}>SO = {classCounts.SO}</div>
+<div style={{background:"#00ff00",padding:5}}>FR = {classCounts.FR}</div>
 
 </div>
 
-<h3>Scholarship Money</h3>
+<h3>Money</h3>
 
 <div style={{maxHeight:300,overflow:"auto"}}>
 
@@ -246,10 +272,9 @@ marginBottom:5
 
 <input
 type="number"
-step="0.01"
-value={scholarships[p.name]||""}
-onChange={e=>updateScholarship(p.name,e.target.value)}
-style={{width:70}}
+value={money[p.name]||""}
+onChange={e=>updateMoney(p.name,e.target.value)}
+style={{width:80}}
 />
 
 </div>
@@ -259,10 +284,12 @@ style={{width:70}}
 </div>
 
 <div style={{
-marginTop:20,
+marginTop:10,
 fontWeight:"bold"
 }}>
-TOTAL: ${(getTotalScholarships()*1400).toLocaleString()}
+
+TOTAL ${Object.values(money).reduce((a,b)=>a+b,0).toLocaleString()}
+
 </div>
 
 </div>
